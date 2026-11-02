@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { useApi } from '../../api/ApiContext';
 import { errorMessage } from '../../api/errors';
-import type { Note, NoteSummary } from '../../api/types';
+import type { NoteSummary } from '../../api/types';
 import { NoteDetail } from './NoteDetail';
 import { NoteForm, type NoteDraft } from './NoteForm';
 import { NoteList } from './NoteList';
@@ -15,6 +15,10 @@ interface ArchiveViewProps {
   draft: NoteDraft;
   onDraftChange: (draft: NoteDraft) => void;
   onDiscardDraft: () => void;
+  onSave: (draft: NoteDraft) => void;
+  saving: boolean;
+  saveError: string | null;
+  refreshRevision: number;
 }
 
 export function ArchiveView({
@@ -23,6 +27,10 @@ export function ArchiveView({
   draft,
   onDraftChange,
   onDiscardDraft,
+  onSave,
+  saving,
+  saveError,
+  refreshRevision,
 }: ArchiveViewProps) {
   const api = useApi();
   const [notes, setNotes] = useState<NoteSummary[] | null>(null);
@@ -42,17 +50,11 @@ export function ArchiveView({
     return () => {
       cancelled = true;
     };
-  }, [api, reloadToken]);
+  }, [api, reloadToken, refreshRevision]);
 
   function reload() {
     setListError(null);
     setReloadToken((token) => token + 1);
-  }
-
-  function handleCreated(note: Note) {
-    onDiscardDraft();
-    onPaneChange({ kind: 'note', id: note.id });
-    reload();
   }
 
   function handleCancel() {
@@ -91,7 +93,9 @@ export function ArchiveView({
             <NoteForm
               draft={draft}
               onDraftChange={onDraftChange}
-              onCreated={handleCreated}
+              onSave={onSave}
+              saving={saving}
+              saveError={saveError}
               onCancel={handleCancel}
             />
           ) : null}

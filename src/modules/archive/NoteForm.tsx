@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
-import { useApi } from '../../api/ApiContext';
-import { errorMessage } from '../../api/errors';
-import type { Note } from '../../api/types';
 import {
   MAX_BODY_BYTES,
   MAX_TITLE_CHARS,
@@ -15,48 +12,46 @@ import {
 export interface NoteDraft {
   title: string;
   body: string;
+  revision: number;
 }
 
 interface NoteFormProps {
   draft: NoteDraft;
   onDraftChange: (draft: NoteDraft) => void;
-  onCreated: (note: Note) => void;
+  onSave: (draft: NoteDraft) => void;
+  saving: boolean;
+  saveError: string | null;
   onCancel: () => void;
 }
 
-export function NoteForm({ draft, onDraftChange, onCreated, onCancel }: NoteFormProps) {
-  const api = useApi();
+export function NoteForm({
+  draft,
+  onDraftChange,
+  onSave,
+  saving,
+  saveError,
+  onCancel,
+}: NoteFormProps) {
   const titleRef = useRef<HTMLInputElement>(null);
   const { title, body } = draft;
   const [fieldErrors, setFieldErrors] = useState<NoteFieldErrors>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
 
     const errors = validateNote(title, body);
     setFieldErrors(errors);
-    setSubmitError(null);
     if (errors.title || errors.body) {
       if (errors.title) titleRef.current?.focus();
       return;
     }
 
-    setSaving(true);
-    try {
-      const note = await api.createNote({ title, body });
-      onCreated(note);
-    } catch (error) {
-      // Keep what the user typed so nothing is lost on a failed save.
-      setSubmitError(errorMessage(error));
-      setSaving(false);
-    }
+    onSave(draft);
   }
 
   return (
@@ -74,6 +69,7 @@ export function NoteForm({ draft, onDraftChange, onCreated, onCancel }: NoteForm
           type="text"
           autoComplete="off"
           value={title}
+          disabled={saving}
           onChange={(event) => onDraftChange({ ...draft, title: event.target.value })}
           aria-invalid={fieldErrors.title ? true : undefined}
           aria-describedby={
@@ -100,6 +96,7 @@ export function NoteForm({ draft, onDraftChange, onCreated, onCancel }: NoteForm
           id="note-body"
           rows={12}
           value={body}
+          disabled={saving}
           onChange={(event) => onDraftChange({ ...draft, body: event.target.value })}
           aria-invalid={fieldErrors.body ? true : undefined}
           aria-describedby={
@@ -121,9 +118,9 @@ export function NoteForm({ draft, onDraftChange, onCreated, onCancel }: NoteForm
         </div>
       </div>
 
-      {submitError ? (
+      {saveError ? (
         <div className="banner banner-error" role="alert">
-          <p>{submitError}</p>
+          <p>{saveError}</p>
         </div>
       ) : null}
 

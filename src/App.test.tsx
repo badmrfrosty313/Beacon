@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -294,6 +294,72 @@ describe('Archive notes', () => {
     await user.click(screen.getByRole('button', { name: 'New note' }));
     expect(screen.getByLabelText('Title')).toHaveValue('');
     expect(screen.getByLabelText('Note text')).toHaveValue('');
+  });
+
+  it('keeps a save pending across module navigation without allowing duplicate saves', async () => {
+    const user = userEvent.setup();
+    const api = createFakeApi([note(1, 'Existing note')]);
+    const performSave = api.createNote.getMockImplementation()!;
+    let completeSave!: () => void;
+    api.createNote.mockImplementationOnce(async (input) => {
+      await new Promise<void>((resolve) => {
+        completeSave = resolve;
+      });
+      return performSave(input);
+    });
+    renderApp(api);
+
+    await user.click(await screen.findByRole('button', { name: 'New note' }));
+    await user.type(screen.getByLabelText('Title'), 'In-flight save');
+    await user.type(screen.getByLabelText('Note text'), 'The original body');
+    await user.click(screen.getByRole('button', { name: 'Save note' }));
+    expect(api.createNote).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: /^Watchtower/ }));
+    await user.click(screen.getByRole('button', { name: /^Archive/ }));
+
+    // A remounted form must not reset saving state or permit cancelling/replacing its draft.
+    expect(screen.getByLabelText('Title')).toHaveValue('In-flight save');
+    expect(screen.getByLabelText('Title')).toBeDisabled();
+    expect(screen.getByLabelText('Note text')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(api.createNote).toHaveBeenCalledTimes(1);
+
+    // The user can navigate to a different saved note; completion must not hijack it.
+    await user.click(await screen.findByRole('button', { name: /Existing note/ }));
+    await act(async () => completeSave());
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Existing note' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /In-flight save/ })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'New note' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(screen.getByLabelText('Note text')).toHaveValue('');
+    expect(api.createNote).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves a draft and save error after navigating away during a failed save', async () => {
+    const user = userEvent.setup();
+    const api = createFakeApi();
+    let rejectSave!: (error: Error) => void;
+    api.createNote.mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectSave = reject;
+        }),
+    );
+    renderApp(api);
+
+    await user.click(await screen.findByRole('button', { name: 'New note' }));
+    await user.type(screen.getByLabelText('Title'), 'Keep after failure');
+    await user.click(screen.getByRole('button', { name: 'Save note' }));
+    await user.click(screen.getByRole('button', { name: /^Settings/ }));
+    await act(async () => rejectSave(new Error('Unable to save right now')));
+    await user.click(screen.getByRole('button', { name: /^Archive/ }));
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Keep after failure');
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to save right now');
+    expect(screen.getByRole('button', { name: 'Save note' })).toBeEnabled();
   });
 
   it('cancelling the form returns to the empty state without saving', async () => {
