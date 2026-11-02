@@ -5,7 +5,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 ## Sprint 001: First Light Foundation
 **Objective:** Launch a working offline Windows app that can persist a simple record. Prefer a thin vertical slice over an elaborate scaffold.
 
-> **Sprint 001 status: implemented, NOT yet verified.** Code for B-001 to B-005 is in <PR_URL>. It was written in an environment whose network policy blocked npm and crates.io and which had no Tauri system libraries, so it has **never been compiled as a Tauri app or launched**. Boxes below stay unchecked until the acceptance criteria are met on a networked Windows machine. Do not check them on the strength of the generated code alone.
+> **Sprint 001 status: implemented, NOT yet verified.** Code for B-001 to B-005 is in [PR #1](https://github.com/badmrfrosty313/Beacon/pull/1). It was written in an environment whose network policy blocked npm and crates.io and which had no Tauri system libraries, so it has **never been compiled as a Tauri app or launched**. Boxes below stay unchecked until the acceptance criteria are met on a networked Windows machine. Do not check them on the strength of the generated code alone.
 
 - [ ] **B-001: Scaffold project.** Tauri 2 + Vite/React + TypeScript + Rust. Document prerequisites, scripts and how to start a dev build.
   - Accept: a clean checkout can build and open a working desktop window.
@@ -28,7 +28,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 2. Run `npm run check:all`; fix whatever fails (ESLint, clippy and Vitest have never run).
 3. Run `npm run tauri dev`; confirm the window opens and a note survives closing and reopening.
 4. Perform the manual airplane-mode procedure and record it in the results table in `docs/OFFLINE-VERIFICATION.md`.
-5. Confirm the CI workflow passes on the PR. (Pushing workflow files may require extra GitHub App permission.)
+5. Confirm the CI workflow passes on the PR (it pushed without a permission problem, but its results had not been checked when this was written).
 6. Consider a cross-language contract test for command names and argument keys (see ADR-010).
 
 ## Sprint 002: Archive
