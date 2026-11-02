@@ -1,6 +1,6 @@
 # BEACON Architecture
 
-Status: **Proposed v0.1 architecture; the Sprint 001 foundation (shell, SQLite migrations, notes demo) is implemented but not yet built or verified on Windows**. Last reviewed: 2026-11-02.
+Status: **Proposed v0.1 architecture; the Sprint 001 foundation (shell, SQLite migrations, notes demo) is implemented and CI-built/tested on Windows, but not yet manually launched or verified**. Last reviewed: 2026-11-02.
 
 ## Goals
 1. Preserve and search user-owned knowledge with no network or login requirement.

@@ -12,7 +12,7 @@ Core archive, research records and portable export/import must not require conne
 **Tradeoffs:** Limited live information; explicit update/backup processes are needed.
 
 ## ADR-002: Proposed application stack
-**Status:** Accepted as planned direction. A scaffold following it is implemented in the Sprint 001 pull request, but **has not yet been built or run** on Windows (see TASKS.md).
+**Status:** Accepted as planned direction. A scaffold following it is implemented in the Sprint 001 pull request, and has been built and automatically tested on a Windows CI runner but **not manually launched** (see TASKS.md).
 
 Use Tauri 2, React/TypeScript/Vite, Rust, and SQLite with FTS5. Optimize for a modest Windows laptop, and verify mobile rather than presuming feature parity.
 
@@ -43,7 +43,7 @@ The first portable archive design will include a versioned manifest and SHA-256 
 Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADMAP, TASKS, and this log remain the shared state. Review and test changes before merging. Do not use chat memory as the only artifact of a decision.
 
 ## ADR-007: Sprint 001 project layout and tooling
-**Status:** Accepted (implemented in the Sprint 001 PR; build not yet verified)
+**Status:** Accepted (implemented; builds and tests pass in Windows CI)
 **Date:** 2026-11-02
 
 **Context:** ADR-002 fixes the stack but not the repository layout, package manager or quality gates. Sprint 001 needs a runnable scaffold and checks that CI can run unchanged.
@@ -59,7 +59,7 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 **Consequences:** Dependency versions were chosen as caret ranges from memory because the authoring environment could not reach the registries, and no lockfiles exist yet. The first networked install may need version adjustments; commit `package-lock.json` and `Cargo.lock` immediately afterwards and move CI to `npm ci`.
 
 ## ADR-008: SQLite through rusqlite with SQL-file migrations
-**Status:** Accepted (implemented; Rust build and tests not yet run)
+**Status:** Accepted (implemented; Rust build and tests pass in Windows CI)
 **Date:** 2026-11-02
 
 **Context:** B-002 requires an OS-appropriate database location, a migration runner, a minimal versioned schema and safe error handling.
@@ -77,7 +77,7 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 **Consequences:** Simple and portable. A single connection is adequate for Sprint 001; revisit when bulk import and FTS indexing arrive. This implements the migration part of OD-001; the document schema and FTS update strategy remain open.
 
 ## ADR-009: Plain-text notes as the Sprint 001 demo record
-**Status:** Accepted (implemented; Rust build and tests not yet run)
+**Status:** Accepted (implemented; Rust build and tests pass in Windows CI)
 **Date:** 2026-11-02
 
 **Context:** B-004 asks for a persistent demo note or document-metadata record, without pre-empting the Archive `Document` model that Sprint 002 will design (OD-002).
@@ -89,7 +89,7 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 **Consequences:** The limits live in three places (Rust constants, SQL `CHECK`, TypeScript constants). Changing one requires changing all and adding a migration for the `CHECK`. The notes table is a demo and may be migrated into, or retired in favour of, the Document model in Sprint 002. No edit or delete exists yet.
 
 ## ADR-010: Frontend/backend boundary
-**Status:** Accepted (implemented; build not yet verified)
+**Status:** Accepted (implemented; builds in Windows CI)
 **Date:** 2026-11-02
 
 **Context:** The task requires frontend components to be separate from database operations, and SECURITY.md requires least-privilege IPC.
@@ -101,7 +101,7 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 **Consequences:** Easy to test with an in-memory fake. Command names and argument keys are duplicated between Rust and `tauriApi.ts`; TypeScript tests pin the names, but there is no automated cross-language contract test, so a Rust-side rename would only be caught at runtime. A generated-bindings approach is a candidate follow-up.
 
 ## ADR-011: Layered offline enforcement
-**Status:** Accepted (guard written; not yet executed in Vitest; manual procedure not yet performed)
+**Status:** Accepted (guard passes in Vitest in Windows CI; manual airplane-mode procedure not yet performed)
 **Date:** 2026-11-02
 
 **Context:** ADR-001 and B-003 require that the first launch and navigation need no network or authentication, with a reproducible test.
@@ -113,7 +113,7 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 **Consequences:** Adding any plugin, crate or permission is a deliberate, reviewed act that requires updating the guard. The static checks cannot observe traffic from the OS, the WebView2 runtime or an installer, which is why the manual procedure remains required.
 
 ## ADR-012: A failed database start does not abort the application
-**Status:** Accepted (implemented; Rust build and tests not yet run)
+**Status:** Accepted (implemented; Rust build and tests pass in Windows CI)
 **Date:** 2026-11-02
 
 **Context:** A release build on Windows is a GUI-subsystem process: if startup panics or returns an error, the user sees nothing at all.

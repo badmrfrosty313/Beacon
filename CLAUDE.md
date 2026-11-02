@@ -16,7 +16,7 @@ This is a preparedness and research tool, **not** an automated prophecy predicto
 6. [CONTRIBUTING.md](CONTRIBUTING.md): development workflow.
 
 ## Current status
-A Sprint 001 scaffold now exists (Tauri 2 shell, React/TypeScript/Vite frontend, Rust backend, SQLite with migrations, a notes demo, tests and a Windows CI workflow), but it has **not yet been built or run on Windows**; TASKS.md says exactly what has and has not been verified. Do not claim it builds, runs, or passes tests until you have run those commands yourself. Real commands are in README.md. Implement further work incrementally.
+A Sprint 001 scaffold now exists (Tauri 2 shell, React/TypeScript/Vite frontend, Rust backend, SQLite with migrations, a notes demo, tests and a Windows CI workflow), and CI on a Windows runner has built it and passed its automated checks, but nobody has **launched** it or done the manual persistence/airplane-mode checks; TASKS.md says exactly what has and has not been verified. Do not claim more than CI or you have actually run. Real commands are in README.md. Implement further work incrementally.
 
 ## Approved direction for v0.1
 - Tauri 2 shell; React + TypeScript + Vite frontend; Rust backend; SQLite including FTS5.

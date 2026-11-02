@@ -4,10 +4,10 @@ BEACON's core promise is that it works with no network. This document defines ho
 checked. There are two layers: an **automated guard** that runs on every `npm test`, and a
 **manual airplane-mode procedure** that must be performed on a real Windows machine.
 
-> **Status of this PR (Sprint 001):** the automated guard is written, but it has **not been
-> executed** in the Vitest runner yet (Vitest could not be installed in the authoring
-> environment). The manual airplane-mode procedure below has **not been performed**. Record
-> results in the table at the end when they are.
+> **Status of this PR (Sprint 001):** the automated guard passes in Vitest on the Windows CI
+> runner (run 41492735401). It is a static check plus a jsdom test with a fake backend; it
+> does not observe the real app's traffic. The manual airplane-mode procedure below has **not
+> been performed**. Record results in the table at the end when it is.
 
 ## 1. Automated guard
 

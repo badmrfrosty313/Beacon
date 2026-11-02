@@ -2,7 +2,7 @@
 
 **Offline-first knowledge, evidence and resilience platform.** 🔦
 
-> **Project status (2026-11-02):** The Sprint 001 "First Light" foundation (Tauri 2 + React + TypeScript + Rust + SQLite) is **implemented but has not yet been built or launched on Windows.** The authoring environment had no access to the npm/crates.io registries or to Tauri's system libraries. [TASKS.md](TASKS.md) records exactly what has and has not been verified. No security or emergency functions should be assumed operational.
+> **Project status (2026-11-02):** The Sprint 001 "First Light" foundation (Tauri 2 + React + TypeScript + Rust + SQLite) **compiles and passes its automated checks on a GitHub Actions Windows runner** ([CI run 41492735401](https://github.com/badmrfrosty313/Beacon/actions/runs/41492735401), commit `3707417`). **The app has not yet been launched by a person**, and the manual persistence and airplane-mode checks have **not** been done. [TASKS.md](TASKS.md) lists exactly what is and is not verified. No security or emergency functions should be assumed operational.
 
 BEACON is intended to make important information usable even when internet access, external accounts or AI services are unavailable. Its initial version focuses on a searchable local document archive, a transparent evidence-analysis workspace, and portable export/import.
 
@@ -53,9 +53,20 @@ npm install
 npm run tauri dev
 ```
 
-The first `tauri dev` compiles all Rust dependencies (including SQLite) and can take several minutes; later runs are fast. A desktop window titled **PROJECT BEACON** should open.
+The first `tauri dev` compiles all Rust dependencies (including SQLite) and can take several minutes; later runs are fast. A desktop window titled **PROJECT BEACON** should open. (CI built the release binary but nobody has yet watched this window open; if it does not, that is a real finding to report.)
 
-> `npm install` and the first Rust build generate `package-lock.json` and `src-tauri/Cargo.lock`. **Commit both** (they could not be generated in the authoring environment) and then switch CI from `npm install` to `npm ci`.
+> `npm install` and the first Rust build generate `package-lock.json` and `src-tauri/Cargo.lock`. **Commit both** (they could not be generated in the authoring environment) and then switch CI from `npm install` to `npm ci`. Until then CI resolves dependency versions fresh on every run.
+
+### Manually verify that notes persist (about 3 minutes)
+
+1. `npm run tauri dev` (or run the built `src-tauri\target\release\beacon.exe`). Wait for the window.
+2. Open **Settings** and note the database path (`...\org.projectbeacon.desktop\beacon.db`) and schema version (expect 1).
+3. In **Archive**, create a note titled `Persistence check` with any text. It should appear in the list and open on click.
+4. Close the window, confirm no `beacon.exe` remains in Task Manager, start the app again.
+5. Expected: the note is still listed with the same title, text and timestamp.
+6. Optional: with Windows Explorer open the folder from step 2 and confirm `beacon.db` exists.
+
+For the airplane-mode variant, follow [docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md) and add a row to its results table.
 
 Running `npm run dev` alone starts only the web UI in a browser. That is not supported: the page will report that the BEACON backend is unavailable, because the data layer lives in the Tauri/Rust process.
 
@@ -77,7 +88,7 @@ npm run tauri build -- --no-bundle   # just src-tauri\target\release\beacon.exe
 | `npm run rust:test`    | Rust unit and integration tests (migrations, notes, persistence across reopen) |
 | `npm run format`       | Apply Prettier to code and config files                                     |
 
-Continuous integration (`.github/workflows/ci.yml`) runs all of these on a Windows runner, plus a release build.
+Continuous integration (`.github/workflows/ci.yml`) runs all of these on a Windows runner, plus a release build (`tauri build --no-bundle`). Each check is a separate step so one failure does not hide the others.
 
 Offline behaviour has an automated guard and a manual airplane-mode procedure; see [docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md).
 
@@ -114,8 +125,9 @@ Components never call Tauri directly: they use the `BeaconApi` interface, so the
 
 ## Known limitations (Sprint 001)
 
-- Not yet built, launched or tested on Windows; see [TASKS.md](TASKS.md).
-- No lockfiles are committed yet (see above).
+- Compiled and automatically tested on a CI Windows runner only; **never launched by a person**, and the manual persistence/airplane-mode checks are not done; see [TASKS.md](TASKS.md).
+- The frontend tests (Vitest) use an in-memory fake backend; they do not exercise Tauri IPC. The Rust tests exercise SQLite and migrations but not the Tauri command layer or window.
+- No lockfiles are committed yet (see above), so CI dependency versions are not pinned.
 - Notes can be created and viewed only: no edit, delete, search, import or export.
 - Plain text only; Markdown and HTML are displayed literally, never rendered.
 - Limits: titles up to 200 characters, note text up to 100,000 bytes, and the list shows at most the 1,000 newest notes.
