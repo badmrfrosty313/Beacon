@@ -288,7 +288,9 @@ describe('Archive notes', () => {
     await user.type(screen.getByLabelText('Note text'), 'Saved body');
     await user.click(screen.getByRole('button', { name: 'Save note' }));
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Saved title' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Saved title' }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'New note' }));
     expect(screen.getByLabelText('Title')).toHaveValue('');
     expect(screen.getByLabelText('Note text')).toHaveValue('');
