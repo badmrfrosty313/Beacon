@@ -4,16 +4,29 @@ import { useApi } from '../../api/ApiContext';
 import { errorMessage } from '../../api/errors';
 import type { Note, NoteSummary } from '../../api/types';
 import { NoteDetail } from './NoteDetail';
-import { NoteForm } from './NoteForm';
+import { NoteForm, type NoteDraft } from './NoteForm';
 import { NoteList } from './NoteList';
 
-type Pane = { kind: 'empty' } | { kind: 'new' } | { kind: 'note'; id: number };
+export type ArchivePane = { kind: 'empty' } | { kind: 'new' } | { kind: 'note'; id: number };
 
-export function ArchiveView() {
+interface ArchiveViewProps {
+  pane: ArchivePane;
+  onPaneChange: (pane: ArchivePane) => void;
+  draft: NoteDraft;
+  onDraftChange: (draft: NoteDraft) => void;
+  onDiscardDraft: () => void;
+}
+
+export function ArchiveView({
+  pane,
+  onPaneChange,
+  draft,
+  onDraftChange,
+  onDiscardDraft,
+}: ArchiveViewProps) {
   const api = useApi();
   const [notes, setNotes] = useState<NoteSummary[] | null>(null);
   const [listError, setListError] = useState<string | null>(null);
-  const [pane, setPane] = useState<Pane>({ kind: 'empty' });
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -37,8 +50,14 @@ export function ArchiveView() {
   }
 
   function handleCreated(note: Note) {
-    setPane({ kind: 'note', id: note.id });
+    onDiscardDraft();
+    onPaneChange({ kind: 'note', id: note.id });
     reload();
+  }
+
+  function handleCancel() {
+    onDiscardDraft();
+    onPaneChange({ kind: 'empty' });
   }
 
   return (
@@ -62,14 +81,19 @@ export function ArchiveView() {
           error={listError}
           selectedId={pane.kind === 'note' ? pane.id : null}
           creating={pane.kind === 'new'}
-          onSelect={(id) => setPane({ kind: 'note', id })}
-          onNew={() => setPane({ kind: 'new' })}
+          onSelect={(id) => onPaneChange({ kind: 'note', id })}
+          onNew={() => onPaneChange({ kind: 'new' })}
           onRetry={reload}
         />
 
         <div className="archive-pane">
           {pane.kind === 'new' ? (
-            <NoteForm onCreated={handleCreated} onCancel={() => setPane({ kind: 'empty' })} />
+            <NoteForm
+              draft={draft}
+              onDraftChange={onDraftChange}
+              onCreated={handleCreated}
+              onCancel={handleCancel}
+            />
           ) : null}
           {pane.kind === 'note' ? <NoteDetail key={pane.id} id={pane.id} /> : null}
           {pane.kind === 'empty' ? (

@@ -12,16 +12,22 @@ import {
   type NoteFieldErrors,
 } from '../../lib/validation';
 
+export interface NoteDraft {
+  title: string;
+  body: string;
+}
+
 interface NoteFormProps {
+  draft: NoteDraft;
+  onDraftChange: (draft: NoteDraft) => void;
   onCreated: (note: Note) => void;
   onCancel: () => void;
 }
 
-export function NoteForm({ onCreated, onCancel }: NoteFormProps) {
+export function NoteForm({ draft, onDraftChange, onCreated, onCancel }: NoteFormProps) {
   const api = useApi();
   const titleRef = useRef<HTMLInputElement>(null);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const { title, body } = draft;
   const [fieldErrors, setFieldErrors] = useState<NoteFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -56,6 +62,9 @@ export function NoteForm({ onCreated, onCancel }: NoteFormProps) {
   return (
     <form className="note-form" onSubmit={handleSubmit} noValidate aria-labelledby="new-note-title">
       <h2 id="new-note-title">New note</h2>
+      <p className="muted">
+        Unsaved drafts are kept while navigating, but are lost when BEACON closes.
+      </p>
 
       <div className="field">
         <label htmlFor="note-title">Title</label>
@@ -65,7 +74,7 @@ export function NoteForm({ onCreated, onCancel }: NoteFormProps) {
           type="text"
           autoComplete="off"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => onDraftChange({ ...draft, title: event.target.value })}
           aria-invalid={fieldErrors.title ? true : undefined}
           aria-describedby={
             fieldErrors.title ? 'note-title-error note-title-count' : 'note-title-count'
@@ -91,7 +100,7 @@ export function NoteForm({ onCreated, onCancel }: NoteFormProps) {
           id="note-body"
           rows={12}
           value={body}
-          onChange={(event) => setBody(event.target.value)}
+          onChange={(event) => onDraftChange({ ...draft, body: event.target.value })}
           aria-invalid={fieldErrors.body ? true : undefined}
           aria-describedby={
             fieldErrors.body ? 'note-body-error note-body-count' : 'note-body-count'

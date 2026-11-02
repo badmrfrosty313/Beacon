@@ -250,6 +250,50 @@ describe('Archive notes', () => {
     expect((window as unknown as { pwned?: boolean }).pwned).toBeUndefined();
   });
 
+  it('preserves a draft when viewing another note and returning to New note', async () => {
+    const user = userEvent.setup();
+    const { api } = renderApp(createFakeApi([note(1, 'Saved note')]));
+
+    await user.click(await screen.findByRole('button', { name: 'New note' }));
+    await user.type(screen.getByLabelText('Title'), 'Unfinished');
+    await user.type(screen.getByLabelText('Note text'), 'Do not lose this');
+    await user.click(await screen.findByRole('button', { name: /Saved note/ }));
+    await user.click(screen.getByRole('button', { name: 'New note' }));
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Unfinished');
+    expect(screen.getByLabelText('Note text')).toHaveValue('Do not lose this');
+    expect(api.createNote).not.toHaveBeenCalled();
+  });
+
+  it('preserves a draft across module navigation', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(await screen.findByRole('button', { name: 'New note' }));
+    await user.type(screen.getByLabelText('Title'), 'Research draft');
+    await user.type(screen.getByLabelText('Note text'), 'Source to review');
+    await user.click(screen.getByRole('button', { name: /^Watchtower/ }));
+    await user.click(screen.getByRole('button', { name: /^Archive/ }));
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Research draft');
+    expect(screen.getByLabelText('Note text')).toHaveValue('Source to review');
+  });
+
+  it('clears the draft after a successful save', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(await screen.findByRole('button', { name: 'New note' }));
+    await user.type(screen.getByLabelText('Title'), 'Saved title');
+    await user.type(screen.getByLabelText('Note text'), 'Saved body');
+    await user.click(screen.getByRole('button', { name: 'Save note' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Saved title' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'New note' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(screen.getByLabelText('Note text')).toHaveValue('');
+  });
+
   it('cancelling the form returns to the empty state without saving', async () => {
     const user = userEvent.setup();
     const { api } = renderApp();
@@ -259,6 +303,9 @@ describe('Archive notes', () => {
 
     expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
     expect(api.createNote).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'New note' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(screen.getByLabelText('Note text')).toHaveValue('');
   });
 });
 
