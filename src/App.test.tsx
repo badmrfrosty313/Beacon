@@ -330,7 +330,9 @@ describe('Archive notes', () => {
     await user.click(await screen.findByRole('button', { name: /Existing note/ }));
     await act(async () => completeSave());
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Existing note' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Existing note' }),
+    ).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: /In-flight save/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'New note' }));
     expect(screen.getByLabelText('Title')).toHaveValue('');
