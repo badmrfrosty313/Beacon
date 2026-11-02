@@ -1,0 +1,35 @@
+[package]
+name = "beacon"
+version = "0.1.0"
+description = "PROJECT BEACON: offline-first knowledge, evidence and resilience platform"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+[lib]
+# `staticlib` and `cdylib` are required by Tauri's mobile (Android/iOS) entry point.
+name = "beacon_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+# SECURITY / OFFLINE: this list is deliberately short. Adding a networking crate
+# (reqwest, hyper, ureq, tauri-plugin-http, ...) must be a reviewed decision recorded in
+# DECISIONS.md. `src/test/offlineGuard.test.ts` fails if an unlisted dependency appears.
+[dependencies]
+tauri = { version = "2", features = [] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+
+[dev-dependencies]
+serde_json = "1"
+tempfile = "3"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
