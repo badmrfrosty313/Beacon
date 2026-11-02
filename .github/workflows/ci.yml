@@ -42,8 +42,18 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Prettier
+        id: prettier
         if: ${{ !cancelled() }}
-        run: npm run format:check
+        run: |
+          npx prettier --version
+          npm run format:check
+
+      # Diagnostic only: shows what Prettier would change so a failure is actionable from the log.
+      - name: Prettier diff (only when the check failed)
+        if: ${{ steps.prettier.outcome == 'failure' }}
+        run: |
+          npx prettier --write .
+          git --no-pager diff
 
       - name: ESLint
         if: ${{ !cancelled() }}
