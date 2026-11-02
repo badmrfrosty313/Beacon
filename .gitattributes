@@ -1,0 +1,6 @@
+# Keep line endings identical on every platform. Without this, Git on Windows checks files
+# out as CRLF, which makes `prettier --check` (and byte-for-byte comparisons) fail.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary

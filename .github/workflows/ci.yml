@@ -1,0 +1,84 @@
+name: CI
+
+# Windows is the first supported target, so the full check runs there. Only GitHub-owned
+# actions are used, to keep the supply chain small (see SECURITY.md).
+#
+# Each check is its own step and later steps use `!cancelled()`, so one failure does not hide
+# the others and a single run reports everything that is broken.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The Windows runner image ships stable Rust with rustfmt and clippy.
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+          rustc --version
+          cargo --version
+
+      # Switch to `npm ci` once package-lock.json is committed (and commit Cargo.lock too).
+      - name: Install JavaScript dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Prettier
+        id: prettier
+        if: ${{ !cancelled() }}
+        run: |
+          npx prettier --version
+          npm run format:check
+
+      # Diagnostic only: shows what Prettier would change so a failure is actionable from the log.
+      - name: Prettier diff (only when the check failed)
+        if: ${{ !cancelled() && steps.prettier.outcome == 'failure' }}
+        run: |
+          npx prettier --write .
+          git --no-pager diff
+
+      - name: ESLint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+
+      - name: TypeScript
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
+
+      - name: Vitest
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Rust format
+        if: ${{ !cancelled() }}
+        run: npm run rust:fmt
+
+      - name: Rust tests
+        if: ${{ !cancelled() }}
+        run: npm run rust:test
+
+      - name: Clippy
+        if: ${{ !cancelled() }}
+        run: npm run rust:lint
+
+      - name: Build the desktop binary (no installer)
+        if: ${{ !cancelled() }}
+        run: npm run tauri build -- --no-bundle
