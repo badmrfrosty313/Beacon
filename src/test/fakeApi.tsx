@@ -22,11 +22,10 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
 
   return {
     getAppInfo: vi.fn(async (): Promise<AppInfo> => info),
-    listNotes: vi.fn(
-      async (): Promise<NoteSummary[]> =>
-        [...notes]
-          .sort((a, b) => b.id - a.id)
-          .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
+    listNotes: vi.fn(async (): Promise<NoteSummary[]> =>
+      [...notes]
+        .sort((a, b) => b.id - a.id)
+        .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
     ),
     getNote: vi.fn(async (id: number): Promise<Note> => {
       const note = notes.find((candidate) => candidate.id === id);

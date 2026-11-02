@@ -6,9 +6,7 @@ import type { Note } from '../../api/types';
 import { formatTimestamp } from '../../lib/format';
 
 type LoadState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; note: Note };
+  { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; note: Note };
 
 /**
  * Shows one note. Render with `key={id}` so state resets when the selection changes.
