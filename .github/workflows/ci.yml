@@ -50,7 +50,7 @@ jobs:
 
       # Diagnostic only: shows what Prettier would change so a failure is actionable from the log.
       - name: Prettier diff (only when the check failed)
-        if: ${{ steps.prettier.outcome == 'failure' }}
+        if: ${{ !cancelled() && steps.prettier.outcome == 'failure' }}
         run: |
           npx prettier --write .
           git --no-pager diff
