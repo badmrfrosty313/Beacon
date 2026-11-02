@@ -2,6 +2,9 @@ name: CI
 
 # Windows is the first supported target, so the full check runs there. Only GitHub-owned
 # actions are used, to keep the supply chain small (see SECURITY.md).
+#
+# Each check is its own step and later steps use `!cancelled()`, so one failure does not hide
+# the others and a single run reports everything that is broken.
 
 on:
   push:
@@ -38,11 +41,34 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Frontend checks (format, lint, typecheck, unit tests)
-        run: npm run check
+      - name: Prettier
+        if: ${{ !cancelled() }}
+        run: npm run format:check
 
-      - name: Rust checks (fmt, clippy, tests)
-        run: npm run check:rust
+      - name: ESLint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+
+      - name: TypeScript
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
+
+      - name: Vitest
+        if: ${{ !cancelled() }}
+        run: npm test
+
+      - name: Rust format
+        if: ${{ !cancelled() }}
+        run: npm run rust:fmt
+
+      - name: Rust tests
+        if: ${{ !cancelled() }}
+        run: npm run rust:test
+
+      - name: Clippy
+        if: ${{ !cancelled() }}
+        run: npm run rust:lint
 
       - name: Build the desktop binary (no installer)
+        if: ${{ !cancelled() }}
         run: npm run tauri build -- --no-bundle
