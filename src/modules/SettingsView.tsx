@@ -9,6 +9,7 @@ type InfoState =
 
 export function SettingsView() {
   const api = useApi();
+  const isBrowserDemo = import.meta.env.MODE === 'browser-demo';
   const [state, setState] = useState<InfoState>({ status: 'loading' });
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export function SettingsView() {
           <dl className="info-grid">
             <dt>Version</dt>
             <dd>{state.info.appVersion}</dd>
-            <dt>Database schema</dt>
+            <dt>{isBrowserDemo ? 'Storage schema' : 'Database schema'}</dt>
             <dd>
               {state.info.schemaVersion === null
                 ? 'Unavailable'
@@ -70,15 +71,36 @@ export function SettingsView() {
       ) : null}
 
       <h2 className="section-heading">Privacy and storage</h2>
-      <ul className="plain-list">
-        <li>BEACON needs no account and sends nothing over the network.</li>
-        <li>There is no telemetry and there are no cloud or AI features in this version.</li>
-        <li>
-          Notes are stored in a local SQLite database. They are <strong>not encrypted</strong> in
-          this version, so anyone with access to this computer account can read them.
-        </li>
-        <li>There is no backup or export yet. Keep your own copies of anything important.</li>
-      </ul>
+      {isBrowserDemo ? (
+        <ul className="plain-list">
+          <li>This is a browser-only preview, not the Windows Tauri/SQLite application.</li>
+          <li>
+            Opening the hosted preview loads assets from GitHub Pages. Notes are not uploaded by
+            BEACON.
+          </li>
+          <li>
+            Demo notes are stored unencrypted in this browser's IndexedDB storage; clearing site
+            data removes them.
+          </li>
+          <li>
+            No account, telemetry, sync, native file access, or export is included in the preview.
+          </li>
+          <li>
+            Use dummy data only; never enter private research or sensitive information in this
+            hosted demo.
+          </li>
+        </ul>
+      ) : (
+        <ul className="plain-list">
+          <li>BEACON needs no account and sends nothing over the network.</li>
+          <li>There is no telemetry and there are no cloud or AI features in this version.</li>
+          <li>
+            Notes are stored in a local SQLite database. They are <strong>not encrypted</strong> in
+            this version, so anyone with access to this computer account can read them.
+          </li>
+          <li>There is no backup or export yet. Keep your own copies of anything important.</li>
+        </ul>
+      )}
     </section>
   );
 }

@@ -63,3 +63,9 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 - Claude and Codex should not concurrently edit the same branch.
 - Report exactly what was changed, tested, and blocked; do not mark tasks done just because code was generated.
 - Update [DECISIONS.md](DECISIONS.md) when a major technical decision changes.
+
+## Developer UX: Browser Harness (issue #2)
+- [ ] **DEV-001: Browser demo** via explicit Vite browser-demo mode, separate IndexedDB API and prominent warning.
+- [ ] **DEV-002: CI + GitHub Pages preview** builds static assets; hosting requires configured Pages and successful deployment.
+- [ ] **DEV-003: Browser check** open preview, create note, refresh and confirm browser persistence (not native persistence).
+- Scope: development/testing convenience only. Does **not** substitute for Sprint 001 real Windows launch, Tauri IPC, or airplane-mode gates.

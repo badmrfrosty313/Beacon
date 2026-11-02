@@ -102,6 +102,13 @@ export default function App() {
       </a>
       <Sidebar active={active} onSelect={setActive} />
       <main id="main" className="content" tabIndex={-1}>
+        {import.meta.env.MODE === 'browser-demo' ? (
+          <div role="status" className="browser-demo-notice">
+            <strong>BROWSER DEMO</strong> · Browser-only IndexedDB. Not the Tauri/SQLite app. Do not
+            enter sensitive notes. Data stays in this browser and may be cleared by browser
+            settings.
+          </div>
+        ) : null}
         {active === 'archive' ? (
           <ArchiveView
             pane={archive.pane}

@@ -64,6 +64,28 @@ describe('navigation and branding', () => {
     expect(screen.getByText('not encrypted')).toBeInTheDocument();
   });
 
+  it('shows browser demo privacy warnings even when browser storage is unavailable', async () => {
+    const user = userEvent.setup();
+    vi.stubEnv('MODE', 'browser-demo');
+    try {
+      const api = createFakeApi();
+      api.getAppInfo.mockRejectedValueOnce(
+        new ApiError('unavailable', 'Browser IndexedDB storage is not available.'),
+      );
+      renderApp(api);
+
+      await user.click(screen.getByRole('button', { name: /^Settings/ }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Browser IndexedDB storage is not available.',
+      );
+      expect(screen.getByText(/browser-only preview, not the Windows Tauri/)).toBeInTheDocument();
+      expect(screen.getByText(/Use dummy data only/)).toBeInTheDocument();
+      expect(screen.queryByText(/Notes are stored in a local SQLite database/)).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('surfaces a database initialization failure in Settings', async () => {
     const user = userEvent.setup();
     const api = createFakeApi([], {
