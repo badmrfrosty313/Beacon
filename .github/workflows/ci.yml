@@ -1,0 +1,48 @@
+name: CI
+
+# Windows is the first supported target, so the full check runs there. Only GitHub-owned
+# actions are used, to keep the supply chain small (see SECURITY.md).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The Windows runner image ships stable Rust with rustfmt and clippy.
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+          rustc --version
+          cargo --version
+
+      # Switch to `npm ci` once package-lock.json is committed (and commit Cargo.lock too).
+      - name: Install JavaScript dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Frontend checks (format, lint, typecheck, unit tests)
+        run: npm run check
+
+      - name: Rust checks (fmt, clippy, tests)
+        run: npm run check:rust
+
+      - name: Build the desktop binary (no installer)
+        run: npm run tauri build -- --no-bundle
