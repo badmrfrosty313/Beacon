@@ -1,6 +1,6 @@
 # BEACON Architecture
 
-Status: **Proposed v0.1 architecture, not yet implemented**. Last reviewed: 2026-11-02.
+Status: **Proposed v0.1 architecture; the Sprint 001 foundation (shell, SQLite migrations, notes demo) is implemented but not yet built or verified on Windows**. Last reviewed: 2026-11-02.
 
 ## Goals
 1. Preserve and search user-owned knowledge with no network or login requirement.
@@ -23,7 +23,7 @@ Live web ingestion, automated geopolitical conclusions, peer-to-peer messaging, 
 | Content | UTF-8 Markdown/TXT plus separate original files | Human-readable archives; predictable v0.1 import |
 | Validation | Rust tests, Vitest, Playwright, Android device checks | Match each layer to appropriate tests |
 
-No install commands are specified until the actual scaffold selects versions and scripts.
+Install, run and test commands are in [README.md](README.md). Implementation decisions for the Sprint 001 scaffold are recorded in ADR-007 to ADR-012 in [DECISIONS.md](DECISIONS.md).
 
 ## Component boundaries
 - **Archive:** import, metadata, viewing, search, tags, and document references.
