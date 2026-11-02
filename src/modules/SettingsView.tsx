@@ -58,9 +58,7 @@ export function SettingsView() {
           <dl className="info-grid">
             <dt>Version</dt>
             <dd>{state.info.appVersion}</dd>
-            <dt>
-              {isBrowserDemo ? 'Storage schema' : 'Database schema'}
-            </dt>
+            <dt>{isBrowserDemo ? 'Storage schema' : 'Database schema'}</dt>
             <dd>
               {state.info.schemaVersion === null
                 ? 'Unavailable'
