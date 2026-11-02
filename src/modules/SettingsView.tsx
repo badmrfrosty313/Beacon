@@ -9,6 +9,7 @@ type InfoState =
 
 export function SettingsView() {
   const api = useApi();
+  const isBrowserDemo = import.meta.env.MODE === 'browser-demo';
   const [state, setState] = useState<InfoState>({ status: 'loading' });
 
   useEffect(() => {
@@ -58,9 +59,7 @@ export function SettingsView() {
             <dt>Version</dt>
             <dd>{state.info.appVersion}</dd>
             <dt>
-              {state.info.dataDir.startsWith('Browser IndexedDB:')
-                ? 'Storage schema'
-                : 'Database schema'}
+              {isBrowserDemo ? 'Storage schema' : 'Database schema'}
             </dt>
             <dd>
               {state.info.schemaVersion === null
@@ -74,7 +73,7 @@ export function SettingsView() {
       ) : null}
 
       <h2 className="section-heading">Privacy and storage</h2>
-      {state.status === 'ready' && state.info.dataDir.startsWith('Browser IndexedDB:') ? (
+      {isBrowserDemo ? (
         <ul className="plain-list">
           <li>This is a browser-only preview, not the Windows Tauri/SQLite application.</li>
           <li>
