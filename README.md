@@ -70,6 +70,35 @@ For the airplane-mode variant, follow [docs/OFFLINE-VERIFICATION.md](docs/OFFLIN
 
 Running `npm run dev` alone starts only the web UI in a browser. That is not supported: the page will report that the BEACON backend is unavailable, because the data layer lives in the Tauri/Rust process.
 
+## Browser demo (separate development harness)
+
+A browser-only demo is available for reviewing the interface without rebuilding the Windows desktop app.
+It runs the same React UI but uses an **explicitly selected browser IndexedDB adapter** instead of
+Tauri IPC + native SQLite. This is not an offline/native acceptance test, a secure vault, or a backup.
+
+To preview locally:
+
+```powershell
+npm install
+npm run dev:demo
+```
+
+To produce a static deployable build:
+
+```powershell
+npm run build:demo
+```
+
+On merge to `main`, `.github/workflows/browser-demo.yml` builds and attempts to publish a GitHub Pages
+preview at `https://badmrfrosty313.github.io/Beacon/`. Repository Settings → Pages must be configured
+for GitHub Actions for the URL to work; publishing is not confirmed until the deployment job succeeds.
+
+**Use dummy data only:** demo notes remain in unencrypted browser IndexedDB, and clearing site data
+deletes them. The hosted page requires a network to load; it does not upload notes or use
+an account or remote backend. Desktop Tauri errors never silently fall back to this demo.
+
+See [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md) and [issue #2](https://github.com/badmrfrosty313/Beacon/issues/2).
+
 ## Build a release
 
 ```powershell

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App';
 import { ApiProvider } from './api/ApiContext';
+import { createBrowserDemoApi } from './api/browserDemoApi';
 import { createTauriApi } from './api/tauriApi';
 import './styles.css';
 
@@ -13,7 +14,9 @@ if (container === null) {
 
 createRoot(container).render(
   <StrictMode>
-    <ApiProvider api={createTauriApi()}>
+    <ApiProvider
+      api={import.meta.env.MODE === 'browser-demo' ? createBrowserDemoApi() : createTauriApi()}
+    >
       <App />
     </ApiProvider>
   </StrictMode>,

@@ -1,0 +1,71 @@
+name: Browser Demo
+
+# Separate from the production Tauri build. PRs build and test; main publishes via Pages.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check formatting
+        id: prettier
+        run: npm run format:check
+      - name: Show formatting diff on failure
+        if: ${{ !cancelled() && steps.prettier.outcome == 'failure' }}
+        run: |
+          npx prettier --write .
+          git --no-pager diff
+      - name: Type check and lint
+        run: |
+          npm run typecheck
+          npm run lint
+      - name: Test browser adapter and UI
+        run: npm test
+      - name: Build browser-only preview
+        run: npm run build:demo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beacon-browser-demo
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    # GitHub Pages must be enabled and set to GitHub Actions in repository settings.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: browser-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: beacon-browser-demo
+          path: ./browser-dist
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./browser-dist
+      - name: Deploy preview to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
