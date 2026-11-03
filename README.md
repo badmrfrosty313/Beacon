@@ -99,6 +99,27 @@ an account or remote backend. Desktop Tauri errors never silently fall back to t
 
 See [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md) and [issue #2](https://github.com/badmrfrosty313/Beacon/issues/2).
 
+## Download and test a Windows desktop build
+
+The latest successful `CI` workflow run on `main` publishes a **no-installer Windows test
+executable** as a GitHub Actions artifact, available for 14 days. You do **not** need Node,
+Rust, or Visual Studio Build Tools to run the downloaded binary.
+
+1. Open [GitHub Actions → CI](https://github.com/badmrfrosty313/Beacon/actions/workflows/ci.yml).
+2. Select the latest **successful** workflow run for `main`.
+3. Under **Artifacts**, download `beacon-windows-test` and extract the ZIP.
+4. Find `beacon.exe` and `SHA256SUMS.txt`. The latter records the executable's SHA-256
+   hash so you can verify the downloaded binary matches the CI output.
+5. Run `beacon.exe` on Windows 10/11 (WebView2 Runtime required, usually present).
+   This executable is **unsigned**, so Windows may display an unrecognized-app warning.
+   Only run the file after confirming it came from this repository's successful CI run.
+6. Follow [the offline test procedure](docs/OFFLINE-VERIFICATION.md): first launch with the
+   network disconnected, create a note, close and restart, and verify the note remains.
+
+**This is not an installer** and it does not store data beside the EXE. Notes use the
+regular `%APPDATA%\\org.projectbeacon.desktop\\beacon.db` path. Do not use private or important
+notes until the app has passed its real-world testing and has a backup/export feature.
+
 ## Build a release
 
 ```powershell
