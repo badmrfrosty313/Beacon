@@ -116,7 +116,7 @@ describe('Archive documents: import and library', () => {
   });
 
   it('imports several files, reporting each result separately', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ applyAccept: false });
     renderApp();
     await importFiles(
       user,
@@ -182,8 +182,9 @@ describe('Archive documents: import and library', () => {
     const user = userEvent.setup();
     const api = createFakeApi();
     renderApp(api);
-    await importFiles(user, textFile('proof.txt', 'original'));
-    await screen.findByRole('article');
+    await importFiles(user, textFile('proof.txt', 'original'), textFile('later.txt', 'newer'));
+    // The most recent import is open in the reader; select the other one to force a fresh read.
+    await screen.findByRole('heading', { level: 2, name: 'later' });
     api.getDocument.mockRejectedValueOnce(
       new ApiError(
         'integrity',
@@ -221,7 +222,7 @@ describe('Archive documents: search', () => {
     expect(items).toHaveLength(1);
     expect(within(items[0] as HTMLElement).getByText('Bridge report')).toBeInTheDocument();
     const mark = items[0]?.querySelector('mark');
-    expect(mark?.textContent).toBe('north');
+    expect(mark?.textContent).toBe('north bridge');
     expect(screen.getByText(/1 match for/)).toBeInTheDocument();
 
     await user.click(within(results).getByRole('button', { name: /Bridge report/ }));

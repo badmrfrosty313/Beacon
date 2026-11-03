@@ -264,6 +264,11 @@ function matchDocument(
   return { score, snippet: buildSnippet(doc.content, mergeRanges(ranges)) };
 }
 
+/** `instanceof` fails across realms (iframes, test sandboxes), so check the tag instead. */
+function isArrayBuffer(value: unknown): value is ArrayBuffer {
+  return Object.prototype.toString.call(value) === '[object ArrayBuffer]';
+}
+
 function hashOf(original: ArrayBuffer): string {
   return sha256Hex(new Uint8Array(original));
 }
@@ -374,7 +379,7 @@ export function createBrowserDemoApi(): BeaconApi {
           'integrity',
           'An archived original is missing or failed its SHA-256 integrity check.',
         );
-      if (!(doc.original instanceof ArrayBuffer) || hashOf(doc.original) !== doc.sha256) {
+      if (!isArrayBuffer(doc.original) || hashOf(doc.original) !== doc.sha256) {
         throw integrity();
       }
       let body: string;

@@ -4,6 +4,13 @@ export const MAX_DOCUMENT_BYTES = 1_048_576;
 export const MAX_FILENAME_BYTES = 255;
 export const MAX_TITLE_CHARS = 200;
 
+// Control characters, plus bidi-override and zero-width characters that disguise names.
+// Built from a string so the invisible characters stay readable escapes in the source.
+const UNSAFE_NAME_CHARS = new RegExp(
+  '[\\p{Cc}\\u200B-\\u200F\\u202A-\\u202E\\u2060\\u2066-\\u2069\\uFEFF]',
+  'u',
+);
+
 const WRONG_TYPE = 'Only Markdown (.md) and text (.txt) files can be imported.';
 
 /** Client-side feedback only; the native Rust importer independently validates everything
@@ -12,8 +19,7 @@ export function validateFilename(name: string): { title: string; format: 'md' | 
   if (
     !name ||
     new TextEncoder().encode(name).length > MAX_FILENAME_BYTES ||
-    // Control characters, plus bidi-override and zero-width characters that disguise names.
-    /[\p{Cc}​-‏‪-‮⁠⁦-⁩﻿]/u.test(name) ||
+    UNSAFE_NAME_CHARS.test(name) ||
     /[\\/:]/u.test(name) ||
     name === '.' ||
     name === '..'
@@ -48,7 +54,7 @@ export function validateContent(bytes: ArrayLike<number>): string {
   if (/\p{Cc}/u.test(body.replace(/[\t\n\r]/gu, ''))) {
     throw new ApiError('validation', 'The file contains unsupported control characters.');
   }
-  return body.replace(/^﻿/u, '');
+  return body.charCodeAt(0) === 0xfeff ? body.slice(1) : body;
 }
 
 export function validateDocument(
