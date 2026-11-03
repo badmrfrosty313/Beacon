@@ -17,8 +17,10 @@
 //! 1. The original is staged to a temporary file, flushed, then renamed into place (an
 //!    all-or-nothing step on the same volume).
 //! 2. Only then is the row inserted (FTS5 is updated by trigger in the same SQLite transaction).
-//! 3. If the insert fails, a file this call newly created is removed again.
-//! 4. A crash between steps 1 and 2 leaves an *orphan* original with no row. That is harmless:
+//! 3. If the insert fails, retain the verified original. Another BEACON process may have
+//!    committed a row referencing that file while this import was in flight; deleting it
+//!    could destroy a valid document. Leaving an orphan is the safe failure mode.
+//! 4. A crash or failed insert between steps 1 and 2 may leave an *orphan* original. That is harmless:
 //!    re-importing the same bytes reuses or atomically replaces it. Stale `*.tmp` files from an
 //!    interrupted write are swept at startup ([`sweep_stale_temp_files`]).
 //! 5. If a row exists but its original is missing or damaged, re-importing the same file
@@ -114,7 +116,8 @@ fn original_path(data_dir: &Path, sha256: &str, format: &str) -> PathBuf {
 
 #[derive(Debug, PartialEq, Eq)]
 enum Stored {
-    /// No file existed; this call created it (and should undo that if the insert fails).
+    /// No file existed; this call created it. Do not unlink on INSERT failure: another
+    /// process may already have committed a row pointing at the same hash.
     Created,
     /// An identical file was already present.
     AlreadyPresent,
@@ -206,11 +209,24 @@ fn duplicate(existing: &DocumentSummary, restored: bool) -> AppError {
     }
 }
 
-/// Import one file. The caller holds the `AppState` database mutex, which serializes imports.
+/// Import one file. The caller holds the `AppState` database mutex, which only serializes
+/// imports *within one process*. Distinct running BEACON processes may share the same database.
 ///
 /// Returns [`AppError::Duplicate`] (without changing any existing record) when identical bytes
 /// were imported before.
 pub fn import(conn: &Connection, data_dir: &Path, name: &str, bytes: &[u8]) -> Result<Document> {
+    import_with_before_insert(conn, data_dir, name, bytes, || {})
+}
+
+/// The callback enables a deterministic test of the multi-process interleaving after an
+/// original is written, but before this connection inserts its metadata row.
+fn import_with_before_insert(
+    conn: &Connection,
+    data_dir: &Path,
+    name: &str,
+    bytes: &[u8],
+    before_insert: impl FnOnce(),
+) -> Result<Document> {
     let (title, format) = validate_filename(name).map_err(reject)?;
     let content = validate_content(bytes).map_err(reject)?;
     let sha256 = hash(bytes);
@@ -222,7 +238,10 @@ pub fn import(conn: &Connection, data_dir: &Path, name: &str, bytes: &[u8]) -> R
         return Err(duplicate(&existing, stored != Stored::AlreadyPresent));
     }
 
-    let stored = ensure_original(data_dir, &sha256, &format, bytes)?;
+    // The original is content-addressed. Never unlink it if the SQL insert fails:
+    // a second process can commit its own row between this write and our INSERT.
+    ensure_original(data_dir, &sha256, &format, bytes)?;
+    before_insert();
     let inserted = conn.query_row(
         &format!(
             "INSERT INTO documents (title, original_name, format, sha256, byte_length, content)
@@ -238,9 +257,8 @@ pub fn import(conn: &Connection, data_dir: &Path, name: &str, bytes: &[u8]) -> R
             body: content,
         }),
         Err(error) => {
-            if stored == Stored::Created {
-                let _ = fs::remove_file(original_path(data_dir, &sha256, &format));
-            }
+            // Deliberately retain the original, even if we created it. We cannot safely
+            // determine whether a different process committed a row referring to it.
             if is_unique_violation(&error) {
                 if let Some(existing) = find_by_hash(conn, &sha256)? {
                     return Err(duplicate(&existing, false));
@@ -536,20 +554,59 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_insert_removes_the_original_it_just_created() {
+    fn a_failed_insert_preserves_an_orphan_for_safe_reimport() {
         let (dir, conn) = fixture();
-        // Force the INSERT (not the earlier duplicate lookup) to fail, after the original has
-        // already been written to disk.
+        let bytes = b"will not be recorded";
+        // Force INSERT to fail after the content-addressed file has been written.
         conn.execute_batch(
             "CREATE TRIGGER fail_insert BEFORE INSERT ON documents
              BEGIN SELECT RAISE(ABORT, 'simulated failure'); END;",
         )
         .unwrap();
-        let result = import(&conn, dir.path(), "x.txt", b"will not be recorded");
+        let result = import(&conn, dir.path(), "x.txt", bytes);
         assert!(matches!(result, Err(AppError::Database(_))));
-        assert!(
-            originals(dir.path()).is_empty(),
-            "no orphaned original after a failed insert"
+        assert!(list(&conn).unwrap().is_empty());
+        assert_eq!(originals(dir.path()), vec![format!("{}.txt", hash(bytes))]);
+        // The retained bytes remain reusable after the database problem is fixed.
+        conn.execute_batch("DROP TRIGGER fail_insert").unwrap();
+        let imported = import(&conn, dir.path(), "x.txt", bytes).unwrap();
+        assert_eq!(get(&conn, dir.path(), imported.metadata.id).unwrap().body, "will not be recorded");
+    }
+
+    #[test]
+    fn two_connections_importing_the_same_bytes_cannot_delete_a_committed_original() {
+        let dir = tempfile::tempdir().unwrap();
+        let db_path = dir.path().join(db::DB_FILE_NAME);
+        let first = db::open_and_migrate(&db_path).unwrap();
+        let second = db::open_and_migrate(&db_path).unwrap();
+        let bytes = b"shared content, only one committed document";
+        let mut committed_id = None;
+
+        // Simulate two distinct app processes deterministically:
+        // A stages the file, B sees the same file and commits its own row,
+        // A's INSERT then collides with the UNIQUE sha256 constraint.
+        let raced = import_with_before_insert(
+            &first,
+            dir.path(),
+            "instance-a.txt",
+            bytes,
+            || {
+                let doc = import(&second, dir.path(), "instance-b.txt", bytes).unwrap();
+                committed_id = Some(doc.metadata.id);
+            },
+        );
+
+        assert!(matches!(raced, Err(AppError::Duplicate { restored: false, .. })));
+        let committed_id = committed_id.expect("second connection committed a document");
+        assert_eq!(list(&second).unwrap().len(), 1);
+        assert_eq!(
+            get(&second, dir.path(), committed_id).unwrap().body,
+            "shared content, only one committed document"
+        );
+        assert_eq!(
+            fs::read(original_path(dir.path(), &hash(bytes), "txt")).unwrap(),
+            bytes,
+            "a failed competing insert must never delete another connection's original"
         );
     }
 

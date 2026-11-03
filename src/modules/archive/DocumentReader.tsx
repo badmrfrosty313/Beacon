@@ -16,7 +16,8 @@ const FORMAT_LABELS: Record<string, string> = {
 };
 
 /**
- * Reads one imported document. Render with `key={id}` so state resets on selection change.
+ * Reads one imported document. Parent remounts after import/repair to refresh
+ * integrity errors; the retry button also allows recovering from transient read failures.
  *
  * The text is untrusted: it is shown only as a text node inside a `white-space: pre-wrap`
  * element, so line breaks are preserved and no HTML, script or Markdown is ever interpreted.
@@ -25,6 +26,12 @@ const FORMAT_LABELS: Record<string, string> = {
 export function DocumentReader({ id }: { id: number }) {
   const api = useApi();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [retryRevision, setRetryRevision] = useState(0);
+
+  function retry() {
+    setState({ status: 'loading' });
+    setRetryRevision((revision) => revision + 1);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -39,7 +46,7 @@ export function DocumentReader({ id }: { id: number }) {
     return () => {
       cancelled = true;
     };
-  }, [api, id]);
+  }, [api, id, retryRevision]);
 
   if (state.status === 'loading') {
     return (
@@ -52,6 +59,9 @@ export function DocumentReader({ id }: { id: number }) {
     return (
       <div className="banner banner-error" role="alert">
         <p>{state.message}</p>
+        <button type="button" className="button" onClick={retry}>
+          Retry document
+        </button>
       </div>
     );
   }

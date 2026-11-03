@@ -307,7 +307,7 @@ export function DocumentsPanel() {
 
       <div className="archive-pane">
         {selectedId !== null ? (
-          <DocumentReader key={selectedId} id={selectedId} />
+          <DocumentReader key={`${selectedId}:${reloadToken}`} id={selectedId} />
         ) : (
           <div className="empty-state">
             <h2>{documents && documents.length > 0 ? 'Select a document' : 'Start a library'}</h2>

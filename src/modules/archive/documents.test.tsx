@@ -178,6 +178,54 @@ describe('Archive documents: import and library', () => {
     );
   });
 
+  it('reloads a selected reader after re-import restores a damaged original', async () => {
+    const user = userEvent.setup();
+    const api = createFakeApi();
+    renderApp(api);
+    await importFiles(user, textFile('proof.txt', 'original'), textFile('later.txt', 'later'));
+    await screen.findByRole('heading', { level: 2, name: 'later' });
+
+    api.getDocument.mockRejectedValueOnce(
+      new ApiError('integrity', 'The archived original failed its SHA-256 integrity check.'),
+    );
+    const library = screen.getByRole('list', { name: 'Documents' });
+    await user.click(within(library).getByRole('button', { name: /proof/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/integrity check/);
+    expect(screen.queryByRole('region', { name: 'Document text' })).toBeNull();
+
+    // A duplicate with a repair restores disk bytes but cannot return a newly
+    // created ID. Import completion must nevertheless refresh the selected reader.
+    api.importDocument.mockRejectedValueOnce(
+      new ApiError('duplicate', 'Already imported; missing original restored.'),
+    );
+    await importFiles(user, textFile('proof.txt', 'original'));
+    expect(await screen.findByText('Already imported; missing original restored.')).toBeVisible();
+    expect(await screen.findByRole('region', { name: 'Document text' })).toHaveTextContent(
+      'original',
+    );
+    expect(api.getDocument).toHaveBeenCalledTimes(3);
+  });
+
+  it('allows a failed document read to be retried without navigating away', async () => {
+    const user = userEvent.setup();
+    const api = createFakeApi();
+    renderApp(api);
+    await importFiles(user, textFile('proof.txt', 'original'), textFile('later.txt', 'later'));
+    await screen.findByRole('heading', { level: 2, name: 'later' });
+
+    api.getDocument.mockRejectedValueOnce(
+      new ApiError('io', 'BEACON could not access its local storage.'),
+    );
+    const library = screen.getByRole('list', { name: 'Documents' });
+    await user.click(within(library).getByRole('button', { name: /proof/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/local storage/);
+
+    await user.click(screen.getByRole('button', { name: 'Retry document' }));
+    expect(await screen.findByRole('region', { name: 'Document text' })).toHaveTextContent(
+      'original',
+    );
+  });
+
   it('shows an integrity failure instead of untrusted text', async () => {
     const user = userEvent.setup();
     const api = createFakeApi();
