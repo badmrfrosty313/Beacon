@@ -2,7 +2,15 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { BeaconApi } from './beaconApi';
 import { toApiError } from './errors';
-import { ApiError, type AppInfo, type Note, type NoteSummary } from './types';
+import {
+  ApiError,
+  type AppInfo,
+  type Document,
+  type DocumentSummary,
+  type Note,
+  type NoteSummary,
+  type SearchHit,
+} from './types';
 
 /** Minimal shape of Tauri's `invoke`, injectable for tests. */
 export type InvokeFn = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
@@ -42,5 +50,9 @@ export function createTauriApi(invokeFn: InvokeFn = guardedInvoke): BeaconApi {
     listNotes: () => call<NoteSummary[]>('list_notes'),
     getNote: (id) => call<Note>('get_note', { id }),
     createNote: ({ title, body }) => call<Note>('create_note', { title, body }),
+    importDocument: ({ name, bytes }) => call<Document>('import_document', { name, bytes }),
+    listDocuments: () => call<DocumentSummary[]>('list_documents'),
+    getDocument: (id) => call<Document>('get_document', { id }),
+    searchDocuments: (query) => call<SearchHit[]>('search_documents', { query }),
   };
 }

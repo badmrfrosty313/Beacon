@@ -16,6 +16,34 @@ export interface NewNote {
   body: string;
 }
 
+/** Metadata for a preserved Markdown or text original (the body is never in list payloads). */
+export interface DocumentSummary {
+  id: number;
+  title: string;
+  originalName: string;
+  format: string;
+  sha256: string;
+  byteLength: number;
+  importedAt: string;
+}
+
+export interface Document extends DocumentSummary {
+  body: string;
+}
+
+export interface ImportDocument {
+  name: string;
+  bytes: number[];
+}
+
+export interface SearchHit {
+  id: number;
+  title: string;
+  format: string;
+  snippet: string;
+  importedAt: string;
+}
+
 export interface AppInfo {
   appVersion: string;
   dataDir: string;
@@ -32,6 +60,7 @@ export type ApiErrorCode =
   | 'migration'
   | 'unavailable'
   | 'internal'
+  | 'integrity'
   /** The page is running outside the Tauri desktop shell (e.g. a plain browser). */
   | 'backend_unavailable'
   | 'unknown';
