@@ -4,7 +4,7 @@ import { useApi } from './api/ApiContext';
 import { errorMessage } from './api/errors';
 import type { Note } from './api/types';
 import { Sidebar } from './components/Sidebar';
-import { ArchiveView, type ArchivePane } from './modules/archive/ArchiveView';
+import { ArchiveView, type ArchivePane, type ArchiveSection } from './modules/archive/ArchiveView';
 import type { NoteDraft } from './modules/archive/NoteForm';
 import { LifelineView } from './modules/LifelineView';
 import type { ModuleId } from './modules/registry';
@@ -78,8 +78,13 @@ function archiveReducer(state: ArchiveState, action: ArchiveAction): ArchiveStat
   }
 }
 
-export default function App() {
+export default function App({
+  initialArchiveSection = 'documents',
+}: {
+  initialArchiveSection?: ArchiveSection;
+}) {
   const api = useApi();
+  const [archiveSection, setArchiveSection] = useState<ArchiveSection>(initialArchiveSection);
   const [active, setActive] = useState<ModuleId>('archive');
   const [archive, dispatch] = useReducer(archiveReducer, initialArchiveState);
 
@@ -111,6 +116,8 @@ export default function App() {
         ) : null}
         {active === 'archive' ? (
           <ArchiveView
+            section={archiveSection}
+            onSectionChange={setArchiveSection}
             pane={archive.pane}
             onPaneChange={(pane) => dispatch({ type: 'select', pane })}
             draft={archive.draft}

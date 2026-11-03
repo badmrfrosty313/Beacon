@@ -9,7 +9,7 @@ export interface ModuleDefinition {
 }
 
 export const MODULES: readonly ModuleDefinition[] = [
-  { id: 'archive', label: 'Archive', status: 'available', tagline: 'Local notes' },
+  { id: 'archive', label: 'Archive', status: 'available', tagline: 'Documents & notes' },
   { id: 'watchtower', label: 'Watchtower', status: 'planned', tagline: 'Events & evidence' },
   { id: 'lifeline', label: 'Lifeline', status: 'planned', tagline: 'Preparedness references' },
   { id: 'settings', label: 'Settings', status: 'available', tagline: 'About & data' },

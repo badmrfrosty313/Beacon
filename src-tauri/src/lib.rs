@@ -10,6 +10,7 @@
 
 pub mod commands;
 pub mod db;
+pub mod documents;
 pub mod error;
 pub mod notes;
 pub mod state;
@@ -31,6 +32,10 @@ pub fn run() {
             commands::create_note,
             commands::list_notes,
             commands::get_note,
+            commands::import_document,
+            commands::list_documents,
+            commands::get_document,
+            commands::search_documents,
         ])
         .run(tauri::generate_context!())
         .expect("error while running PROJECT BEACON");

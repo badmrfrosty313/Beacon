@@ -1,4 +1,13 @@
-import type { AppInfo, NewNote, Note, NoteSummary } from './types';
+import type {
+  AppInfo,
+  Document,
+  DocumentSummary,
+  ImportDocument,
+  NewNote,
+  Note,
+  NoteSummary,
+  SearchHit,
+} from './types';
 
 /**
  * Everything the UI may ask of the backend. Components depend on this interface only, never on
@@ -9,4 +18,8 @@ export interface BeaconApi {
   listNotes(): Promise<NoteSummary[]>;
   getNote(id: number): Promise<Note>;
   createNote(input: NewNote): Promise<Note>;
+  importDocument(input: ImportDocument): Promise<Document>;
+  listDocuments(): Promise<DocumentSummary[]>;
+  getDocument(id: number): Promise<Document>;
+  searchDocuments(query: string): Promise<SearchHit[]>;
 }

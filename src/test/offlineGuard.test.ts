@@ -129,7 +129,13 @@ describe('Tauri configuration is locked down', () => {
 describe('dependency allowlists', () => {
   it('Rust dependencies are limited to the reviewed set', () => {
     const toml = read('src-tauri/Cargo.toml');
-    expect(cargoSection(toml, 'dependencies')).toEqual(['rusqlite', 'serde', 'tauri', 'thiserror']);
+    expect(cargoSection(toml, 'dependencies')).toEqual([
+      'rusqlite',
+      'serde',
+      'sha2',
+      'tauri',
+      'thiserror',
+    ]);
     expect(cargoSection(toml, 'build-dependencies')).toEqual(['tauri-build']);
     expect(cargoSection(toml, 'dev-dependencies')).toEqual(['serde_json', 'tempfile']);
   });

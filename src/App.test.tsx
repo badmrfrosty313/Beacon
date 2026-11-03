@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from './api/types';
-import { DEFAULT_INFO, createFakeApi, note, renderApp } from './test/fakeApi';
+import { DEFAULT_INFO, createFakeApi, note, renderApp, renderNotes } from './test/fakeApi';
 
 describe('navigation and branding', () => {
   it('shows the PROJECT BEACON brand and the four modules', () => {
@@ -105,22 +105,31 @@ describe('navigation and branding', () => {
 
 describe('Archive notes', () => {
   it('shows an empty state when there are no notes', async () => {
-    renderApp();
+    renderNotes();
     expect(await screen.findByText('No notes yet.')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 2, name: 'Start with a note' }),
     ).toBeInTheDocument();
   });
 
-  it('clearly labels notes as a demo and defers import/search', () => {
+  it('opens on the Documents section and can switch to Notes', async () => {
+    const user = userEvent.setup();
     renderApp();
-    expect(screen.getByText('Sprint 001 demo')).toBeInTheDocument();
-    expect(screen.getByText(/not implemented yet/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 2, name: /^Documents/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Documents' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: 'Notes' }));
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByText('No notes yet.')).toBeInTheDocument();
   });
 
   it('lists saved notes newest first and shows the selected note', async () => {
     const user = userEvent.setup();
-    renderApp(
+    renderNotes(
       createFakeApi([note(1, 'Older note', 'old body'), note(2, 'Newer note', 'new body')]),
     );
 
@@ -143,7 +152,7 @@ describe('Archive notes', () => {
 
   it('creates a note and then displays it', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp();
+    const { api } = renderNotes();
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Water plan');
@@ -174,7 +183,7 @@ describe('Archive notes', () => {
 
   it('allows a note with an empty body', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp();
+    const { api } = renderNotes();
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Just a title');
     await user.click(screen.getByRole('button', { name: 'Save note' }));
@@ -185,7 +194,7 @@ describe('Archive notes', () => {
 
   it('rejects an empty title without calling the backend', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp();
+    const { api } = renderNotes();
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), '   ');
     await user.click(screen.getByRole('button', { name: 'Save note' }));
@@ -197,7 +206,7 @@ describe('Archive notes', () => {
 
   it('rejects an over-long title without calling the backend', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp();
+    const { api } = renderNotes();
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.click(screen.getByLabelText('Title'));
     await user.paste('x'.repeat(201));
@@ -213,7 +222,7 @@ describe('Archive notes', () => {
     api.createNote.mockRejectedValueOnce(
       new ApiError('database', 'BEACON could not read or write its local database.'),
     );
-    renderApp(api);
+    renderNotes(api);
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Keep me');
@@ -238,7 +247,7 @@ describe('Archive notes', () => {
     api.listNotes.mockRejectedValueOnce(
       new ApiError('unavailable', 'BEACON could not open its local database: disk is full'),
     );
-    renderApp(api);
+    renderNotes(api);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('disk is full');
     await user.click(screen.getByRole('button', { name: 'Retry' }));
@@ -250,7 +259,7 @@ describe('Archive notes', () => {
     const user = userEvent.setup();
     const api = createFakeApi([note(1, 'Fragile')]);
     api.getNote.mockRejectedValueOnce(new ApiError('not_found', 'That note could not be found.'));
-    renderApp(api);
+    renderNotes(api);
 
     await user.click(await screen.findByRole('button', { name: /Fragile/ }));
     expect(await screen.findByRole('alert')).toHaveTextContent('That note could not be found.');
@@ -259,7 +268,7 @@ describe('Archive notes', () => {
   it('renders note content as inert text, never as HTML', async () => {
     const user = userEvent.setup();
     const hostile = '<img src=x onerror="window.pwned=true"><b>bold</b>';
-    const { container } = renderApp(
+    const { container } = renderNotes(
       createFakeApi([note(1, '<script>window.pwned=true</script>', hostile)]),
     );
 
@@ -274,7 +283,7 @@ describe('Archive notes', () => {
 
   it('preserves a draft when viewing another note and returning to New note', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp(createFakeApi([note(1, 'Saved note')]));
+    const { api } = renderNotes(createFakeApi([note(1, 'Saved note')]));
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Unfinished');
@@ -289,7 +298,7 @@ describe('Archive notes', () => {
 
   it('preserves a draft across module navigation', async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderNotes();
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Research draft');
@@ -303,7 +312,7 @@ describe('Archive notes', () => {
 
   it('clears the draft after a successful save', async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderNotes();
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Saved title');
@@ -329,7 +338,7 @@ describe('Archive notes', () => {
       });
       return performSave(input);
     });
-    renderApp(api);
+    renderNotes(api);
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'In-flight save');
@@ -372,7 +381,7 @@ describe('Archive notes', () => {
           rejectSave = reject;
         }),
     );
-    renderApp(api);
+    renderNotes(api);
 
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'Keep after failure');
@@ -388,7 +397,7 @@ describe('Archive notes', () => {
 
   it('cancelling the form returns to the empty state without saving', async () => {
     const user = userEvent.setup();
-    const { api } = renderApp();
+    const { api } = renderNotes();
     await user.click(await screen.findByRole('button', { name: 'New note' }));
     await user.type(screen.getByLabelText('Title'), 'draft');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -415,7 +424,7 @@ describe('offline behaviour', () => {
 
     try {
       const user = userEvent.setup();
-      renderApp();
+      renderNotes();
 
       for (const name of ['Watchtower', 'Lifeline', 'Settings', 'Archive']) {
         await user.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));

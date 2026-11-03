@@ -36,6 +36,22 @@ describe('createTauriApi: command contract with src-tauri/src/commands.rs', () =
     expect(fn).toHaveBeenCalledWith('get_note', { id: 7 });
   });
 
+  it('maps document commands and argument keys to Rust IPC', async () => {
+    const { fn, invoke } = fakeInvoke([]);
+    const api = createTauriApi(invoke);
+    await api.importDocument({ name: 'evidence.md', bytes: [35, 32, 111, 107] });
+    await api.listDocuments();
+    await api.getDocument(4);
+    await api.searchDocuments('north bridge');
+    expect(fn).toHaveBeenNthCalledWith(1, 'import_document', {
+      name: 'evidence.md',
+      bytes: [35, 32, 111, 107],
+    });
+    expect(fn).toHaveBeenNthCalledWith(2, 'list_documents', undefined);
+    expect(fn).toHaveBeenNthCalledWith(3, 'get_document', { id: 4 });
+    expect(fn).toHaveBeenNthCalledWith(4, 'search_documents', { query: 'north bridge' });
+  });
+
   it('maps createNote to create_note with exactly `title` and `body`', async () => {
     const { fn, invoke } = fakeInvoke({ id: 1 });
     await createTauriApi(invoke).createNote({ title: 'T', body: 'B' });
