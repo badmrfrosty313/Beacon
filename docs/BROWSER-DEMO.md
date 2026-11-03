@@ -59,4 +59,18 @@ Do not claim publication until it succeeds.
    or reload without service worker caching (not part of this preview).
 6. Open Settings and verify it states **Browser IndexedDB** instead of SQLite.
 
+### Documents in the browser demo (Sprint 002)
+
+7. Archive → Documents → **Import documents**; choose a `.md` or `.txt` file (UTF-8, up to 1 MiB).
+   It should be listed and open in the reader with file name, format, size, time and SHA-256.
+8. Search for a word, then for `"an exact phrase"` from the file. The note under the search box must
+   say this is a browser word scan and **not** SQLite FTS5. Click a result to open it.
+9. Import the same file again: expect "already in your library".
+10. Reload the page: the documents and search still work. Existing notes from earlier demo
+    versions are kept (the IndexedDB schema upgrades from version 1 to 2 in place).
+
+The demo stores the original bytes and a SHA-256 in IndexedDB and re-verifies the hash when a
+document is opened. It holds at most 200 documents, and its data is separate from the desktop
+app's SQLite database. **Do not import confidential files into the hosted demo.**
+
 Record these checks as browser-only, not native verification.

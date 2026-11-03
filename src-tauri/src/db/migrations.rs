@@ -130,8 +130,9 @@ mod tests {
         validate_sequence(MIGRATIONS).unwrap();
         assert_eq!(latest_version(), MIGRATIONS.len() as i64);
         for migration in MIGRATIONS {
-            // Comment lines legitimately mention BEGIN/COMMIT (the migration header explains
-            // the rule), so only inspect statements.
+            // The runner owns the transaction, so a migration must not open or close one.
+            // Comment lines are ignored, and `BEGIN` inside `CREATE TRIGGER ... BEGIN ... END`
+            // is legitimate, so only statements that *start* with transaction control count.
             let sql = migration
                 .sql
                 .lines()
@@ -139,11 +140,16 @@ mod tests {
                 .collect::<Vec<_>>()
                 .join("\n")
                 .to_uppercase();
-            assert!(
-                !sql.contains("BEGIN") && !sql.contains("COMMIT"),
-                "migration {} must not manage its own transaction",
-                migration.version
-            );
+            for statement in sql.split(';') {
+                let statement = statement.trim_start();
+                for forbidden in ["BEGIN", "COMMIT", "ROLLBACK", "SAVEPOINT", "RELEASE"] {
+                    assert!(
+                        !statement.starts_with(forbidden),
+                        "migration {} must not manage its own transaction ({forbidden})",
+                        migration.version
+                    );
+                }
+            }
         }
     }
 

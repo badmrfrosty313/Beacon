@@ -26,9 +26,15 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 5. Update GitHub-owned Node 20 actions to v5 when confirmed.
 
 ## Sprint 002: Archive
+> **Sprint 002 status: implemented on `feature/sprint-002-archive`; CI and manual verification pending.** Boxes stay unchecked until the PR's CI run passes and the owner has performed the native Windows and hosted-browser acceptance tests (steps in README.md and docs/BROWSER-DEMO.md). The two earlier commits on this branch (`84762ed`, `9280aea`) were reviewed critically and substantially reworked; see ADR-013.
+
 - [ ] **B-006:** Import bounded UTF-8 .md and .txt as untrusted files; preserve originals and SHA-256 hashes.
+  - Implemented: file picker (`<input type=file>`, no plugin), 1 MiB / UTF-8 / control-character / filename validation, exact original bytes under `originals/<sha256>.<ext>`, duplicate detection by hash, atomic write + failure cleanup + restore-on-reimport + stale-temp sweep.
 - [ ] **B-007:** Index text with SQLite FTS5; search by phrase and display a result snippet.
+  - Implemented: migration 0002 (external-content FTS5 + trigger), safe query parser (all input becomes literal terms/phrases), parameter-bound, 100-result cap, highlighted snippets rendered as text.
 - [ ] **B-008:** Read originals, retain metadata, show import errors, and survive close/reopen.
+  - Implemented: reader re-verifies the stored original's SHA-256 on every open; shows file name, format, size, time, fingerprint; per-file import errors; Rust restart tests reopen the database and originals.
+- [ ] **Browser demo (IndexedDB) parity:** import/list/read/search with a clearly labeled non-FTS5 word search; existing notes preserved by an in-place v1→v2 schema upgrade.
 
 ## Sprint 003: Scripture Navigation
 - [ ] **B-009:** Select a legally distributable content source and document its license.

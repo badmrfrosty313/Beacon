@@ -61,6 +61,8 @@ export type ApiErrorCode =
   | 'unavailable'
   | 'internal'
   | 'integrity'
+  /** The same bytes were already imported; nothing was changed (or a lost original restored). */
+  | 'duplicate'
   /** The page is running outside the Tauri desktop shell (e.g. a plain browser). */
   | 'backend_unavailable'
   | 'unknown';

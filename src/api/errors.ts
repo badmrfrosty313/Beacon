@@ -8,6 +8,8 @@ const KNOWN_CODES: readonly ApiErrorCode[] = [
   'migration',
   'unavailable',
   'internal',
+  'integrity',
+  'duplicate',
 ];
 
 /**

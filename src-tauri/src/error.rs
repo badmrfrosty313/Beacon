@@ -32,6 +32,10 @@ pub enum AppError {
     Internal,
     #[error("archived original failed its integrity check")]
     Integrity,
+    /// Identical bytes were already imported. `restored` is true when the archived original
+    /// had been lost or damaged and this import repaired it.
+    #[error("duplicate document")]
+    Duplicate { title: String, restored: bool },
 }
 
 impl From<ValidationError> for AppError {
@@ -52,6 +56,7 @@ impl AppError {
             Self::Unavailable(_) => "unavailable",
             Self::Internal => "internal",
             Self::Integrity => "integrity",
+            Self::Duplicate { .. } => "duplicate",
         }
     }
 
@@ -59,7 +64,7 @@ impl AppError {
     pub fn user_message(&self) -> String {
         match self {
             Self::Validation(message) => message.clone(),
-            Self::NotFound => "That note could not be found.".to_owned(),
+            Self::NotFound => "That item could not be found.".to_owned(),
             Self::Database(_) => {
                 "BEACON could not read or write its local database. Your data was not changed by this action."
                     .to_owned()
@@ -70,7 +75,16 @@ impl AppError {
                 format!("BEACON could not open its local database: {detail}")
             }
             Self::Internal => "BEACON hit an unexpected internal error.".to_owned(),
-            Self::Integrity => "An archived original failed its SHA-256 integrity check.".to_owned(),
+            Self::Integrity => {
+                "An archived original is missing or failed its SHA-256 integrity check.".to_owned()
+            }
+            Self::Duplicate { title, restored } => {
+                let mut message = format!("This file is already in your library as \u{201c}{title}\u{201d}.");
+                if *restored {
+                    message.push_str(" Its archived copy was missing or damaged and has been restored.");
+                }
+                message
+            }
         }
     }
 }
@@ -103,7 +117,7 @@ mod tests {
     fn serializes_as_code_and_message() {
         let json = to_json(&AppError::NotFound);
         assert_eq!(json["code"], "not_found");
-        assert_eq!(json["message"], "That note could not be found.");
+        assert_eq!(json["message"], "That item could not be found.");
     }
 
     #[test]
@@ -138,6 +152,31 @@ mod tests {
     }
 
     #[test]
+    fn duplicate_errors_name_the_existing_title_and_mention_a_restore() {
+        let plain = to_json(&AppError::Duplicate {
+            title: "Radio".to_owned(),
+            restored: false,
+        });
+        assert_eq!(plain["code"], "duplicate");
+        assert_eq!(
+            plain["message"],
+            "This file is already in your library as \u{201c}Radio\u{201d}."
+        );
+        let restored = to_json(&AppError::Duplicate {
+            title: "Radio".to_owned(),
+            restored: true,
+        });
+        assert!(restored["message"].as_str().unwrap().contains("restored"));
+    }
+
+    #[test]
+    fn integrity_errors_do_not_leak_paths() {
+        let json = to_json(&AppError::Integrity);
+        assert_eq!(json["code"], "integrity");
+        assert!(!json["message"].as_str().unwrap().contains("originals"));
+    }
+
+    #[test]
     fn every_variant_has_a_distinct_code() {
         let codes = [
             AppError::Validation(String::new()).code(),
@@ -148,6 +187,11 @@ mod tests {
             AppError::Unavailable(String::new()).code(),
             AppError::Internal.code(),
             AppError::Integrity.code(),
+            AppError::Duplicate {
+                title: String::new(),
+                restored: false,
+            }
+            .code(),
         ];
         let mut sorted = codes.to_vec();
         sorted.sort_unstable();

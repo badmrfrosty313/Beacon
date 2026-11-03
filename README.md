@@ -8,20 +8,24 @@
 > application restart.** The browser demo is deployed and its separate note persistence test also
 > passed. **Full airplane-mode verification and clean first-launch testing have not been
 > explicitly confirmed**; dependency lockfiles also remain to be committed. See [TASKS.md](TASKS.md).
+> **Sprint 002 (document library) is on branch `feature/sprint-002-archive` and has not been
+> manually tested by a person**; its automated status is in [TASKS.md](TASKS.md).
 > No advanced security or emergency functions should be assumed operational.
 
 BEACON is intended to make important information usable even when internet access, external accounts or AI services are unavailable. Its initial version focuses on a searchable local document archive, a transparent evidence-analysis workspace, and portable export/import.
 
 BEACON is a general-purpose tool. A user's theological, historical or geopolitical research can live in an **optional** research collection; it is not presented as verified emergency advice.
 
-## What exists today (Sprint 001)
+## What exists today (Sprint 001 and 002)
 
 - A dark-mode desktop window branded **PROJECT BEACON** with navigation for Archive, Watchtower, Lifeline and Settings. Watchtower and Lifeline are clearly labeled **Not implemented** placeholders.
 - A local **SQLite** database created on first launch in the per-user application-data directory, managed by **versioned, forward-only migrations**.
-- **Archive** hosts a simple local notes demo: create a plain-text note and view it. Notes are stored in SQLite and are meant to survive closing and reopening the app.
+- **Archive → Documents** (Sprint 002): import Markdown (`.md`) and plain-text (`.txt`) files (UTF-8, up to 1 MiB each), keep the exact original bytes with a SHA-256 fingerprint, search them offline with SQLite FTS5 (words, or `"exact phrases"`), and read them safely as plain text. Duplicates are detected by hash.
+- **Archive → Notes**: the Sprint 001 plain-text notes, unchanged.
+- Everything is stored locally and survives closing and reopening the app. The hosted **browser demo** has the same workflow over IndexedDB, with a clearly labeled, simpler word search (see [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md)).
 - No account, no cloud connection, no telemetry, no external API, and no networking dependency.
 
-**Not implemented yet:** document import, full-text search, Watchtower records, Seed export/import, encryption at rest, backup, and Android packaging. Notes are **not encrypted**.
+**Not implemented yet:** deleting or exporting documents, PDF/other formats, Watchtower records, Seed export/import, encryption at rest, backup, and Android packaging. Notes are **not encrypted**.
 
 ## Planned modules
 
@@ -148,12 +152,22 @@ Continuous integration (`.github/workflows/ci.yml`) runs all of these on a Windo
 
 Offline behaviour has an automated guard and a manual airplane-mode procedure; see [docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md).
 
+### Manually verify documents (Windows, about 5 minutes)
+
+1. Create two small files, for example `plan.md` containing `# Plan` and `Meet at the north bridge.`, and `water.txt` containing `Store two litres per person per day.`
+2. Archive → Documents → **Import documents**, and pick both.
+3. Search for `"north bridge"` (with the quotes). Expect one result with the phrase highlighted. Click it: the reader shows the text, file name, format, size, time and SHA-256.
+4. Import `plan.md` again: expect "already in your library", and still two documents.
+5. Close BEACON completely, reopen it, and confirm both documents are listed and the search still works. (To compare fingerprints: `Get-FileHash plan.md -Algorithm SHA256` should match the value shown.)
+6. Optional: with Windows Explorer open `%APPDATA%\org.projectbeacon.desktop\originals`; each file is named `<sha256>.md|txt` and is byte-identical to what you imported.
+
 ## Where your data lives
 
 | What     | Location (Windows)                                      |
 | -------- | ------------------------------------------------------- |
 | Database | `%APPDATA%\org.projectbeacon.desktop\beacon.db`         |
 | WAL files | `beacon.db-wal`, `beacon.db-shm` beside it (normal for SQLite) |
+| Imported originals | `%APPDATA%\org.projectbeacon.desktop\originals\<sha256>.md|txt` (exact bytes as imported) |
 
 Settings inside the app shows the exact path. To start from scratch, close BEACON and delete that folder. The database is **not encrypted**, so anyone with access to your Windows account can read it, and there is no backup or export yet: keep your own copies of anything important.
 
@@ -179,12 +193,15 @@ docs/                    Verification procedures
 
 Components never call Tauri directly: they use the `BeaconApi` interface, so they can be tested with an in-memory fake and the storage layer can evolve independently.
 
-## Known limitations (Sprint 001)
+## Known limitations
 
 - Windows CI build passed and owner manually confirmed the downloaded native EXE launches and saved notes survive restarting. **Airplane-mode and clean first-launch checks are still outstanding**; see [TASKS.md](TASKS.md).
 - The frontend tests (Vitest) use an in-memory fake backend; they do not exercise Tauri IPC. The Rust tests exercise SQLite and migrations but not the Tauri command layer or window.
 - No lockfiles are committed yet (see above), so CI dependency versions are not pinned.
-- Notes can be created and viewed only: no edit, delete, search, import or export.
+- Notes can be created and viewed only. Documents can be imported, searched and read only: no edit, delete, rename, tags, export or backup yet (Seed export/import is Sprint 006).
+- Markdown is shown as source text, not rendered. Only UTF-8 `.md` and `.txt` up to 1 MiB are accepted; PDFs and other formats are rejected.
+- Search is word/phrase matching with FTS5 relevance ranking (best 100); no wildcards, `OR`/`NOT` operators or stemming. Documents and the search index are **not encrypted**.
+- The browser demo's search is a separate, simpler implementation and can return different results than the desktop app.
 - Plain text only; Markdown and HTML are displayed literally, never rendered.
 - Limits: titles up to 200 characters, note text up to 100,000 bytes, and the list shows at most the 1,000 newest notes.
 - Android has not been attempted.

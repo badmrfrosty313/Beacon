@@ -124,6 +124,26 @@ Claude and Codex may implement on separate branches. README, ARCHITECTURE, ROADM
 
 **Consequences:** The user gets an explanation instead of a blank or vanished window. BEACON does not attempt repair, backup or recovery; that is future work and must not delete or overwrite an unreadable database automatically.
 
+## ADR-013: Document import, originals and FTS5 (Sprint 002)
+**Status:** Accepted (implemented in the Sprint 002 PR; see TASKS.md for what CI and the owner have verified)
+**Date:** 2026-11-03
+
+**Context:** B-006 to B-008 need a document library that preserves untrusted files exactly, finds them offline, and survives a restart, without adding network capability or weakening ADR-003 (originals are not solely in SQLite).
+
+**Decision:**
+- **Originals on disk, content-addressed.** Each import is written once, unmodified, to `<app data>/originals/<sha256>.<md|txt>`. The user's file name is never part of a path; it is stored only as display metadata (`original_name`, `title`), so path traversal through a name is structurally impossible. Names are additionally validated (plain name, no separators, controls, bidi/zero-width characters, 255 bytes).
+- **SQLite holds metadata plus a decoded text copy** (`documents.content`, migration 0002) that an external-content FTS5 table indexes via an insert trigger. Reading a document re-reads the original from disk and re-verifies length and SHA-256; a mismatch or a missing file returns an `integrity` error rather than text.
+- **Write order and recovery.** Stage to a temporary file, flush, atomically rename into place, then insert the row (the FTS update rides the same SQLite transaction). If the insert fails, a newly created file is removed. A crash between the two leaves an orphan original, which is harmless and reused or atomically replaced on the next import of the same bytes. Re-importing identical bytes when the archived original is missing or damaged restores it (the new bytes are verified to hash to the recorded SHA-256). Stale `*.tmp` files older than 5 minutes are removed at startup. Directory-level fsync is not performed (documented limitation).
+- **Duplicates** are detected by SHA-256 (unique column). A duplicate import changes nothing and is reported with the existing title.
+- **Limits:** 1 MiB, UTF-8 only, control characters (other than `\n \r \t`) rejected, empty files rejected, `.md`/`.txt` only. Markdown is shown as source text, never rendered, so there is no HTML or script path at all.
+- **Search input is never FTS5 syntax.** The query is parsed into words and quoted phrases; each becomes one FTS5 string literal and they are ANDed. `OR`, `NOT`, `NEAR`, `*`, `^`, `col:` and parentheses are therefore ordinary text. The expression is bound as a parameter, length-limited (200 chars, 8 terms), results are capped at 100, and snippets mark matches with control characters that cannot occur in imported text; the UI turns them into `<mark>` text nodes.
+- **File picker without a plugin.** The UI uses a standard `<input type="file">` and `FileReader`; the bytes cross IPC as an array (at most 1 MiB, so JSON overhead is acceptable). This avoids adding the Tauri dialog/fs plugins and their permissions, preserving ADR-011 (no plugins, core-only capability).
+- **Browser demo parity, clearly labeled.** The hosted demo implements the same `BeaconApi` over IndexedDB (database version 2 adds a `documents` store; existing notes are untouched by the upgrade). Its search is a simple accent- and case-insensitive word scan and is **not** FTS5; the UI says so beside the search box, and the native app never falls back to it. A pure-TypeScript SHA-256 (checked against Node's crypto) is used so the demo does not depend on `crypto.subtle`.
+
+**Alternatives:** storing originals as SQLite BLOBs only (violates ADR-003, harder to recover); using the user's file name on disk (path-handling risk); passing raw user text to `MATCH` (operator injection and syntax errors); Tauri dialog/fs plugins (new permissions); rendering Markdown (needs a sanitizer; out of scope).
+
+**Consequences:** A new dependency, `sha2` (pure Rust, no networking), was added to the allowlist test. Documents cannot yet be deleted or exported (Seed, Sprint 006), so imported originals and rows accumulate. Two app instances could still race on the same data directory (no single-instance guard; SQLite serialises the row insert and unique hash). Content hashing detects accidental or local tampering relative to the stored SHA-256; it does not authenticate who wrote a file (ADR-005).
+
 ## Open decisions
 - **OD-001:** Final SQLite schema beyond the Sprint 001 notes table, and the FTS update strategy. (The migration mechanism itself is decided in ADR-008.)
 - **OD-002:** Exact document file layout, IDs, duplicate-detection behavior and storage limits.

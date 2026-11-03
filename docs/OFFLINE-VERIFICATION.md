@@ -70,6 +70,16 @@ Goal: show that a cold start, navigation, note creation and a restart all work w
     - Expected: the app still opens, and Archive/Settings show a clear "could not open its local
       database" message instead of crashing.
 
+### Documents addendum (Sprint 002)
+
+With the network still disabled, also do the following and record it in the results table:
+
+- Import one `.md` and one `.txt` file with **Import documents** (the file picker is a local OS
+  dialog; no network is involved).
+- Search for a word and for a quoted phrase from each file; open a result and check the SHA-256.
+- Close BEACON completely, relaunch it still offline, and confirm the documents are listed and
+  searchable.
+
 Restore your network afterwards.
 
 ## 3. Results log

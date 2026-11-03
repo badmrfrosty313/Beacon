@@ -5,11 +5,16 @@ import { errorMessage } from '../../api/errors';
 import type { NoteSummary } from '../../api/types';
 import { NoteDetail } from './NoteDetail';
 import { NoteForm, type NoteDraft } from './NoteForm';
+import { DocumentsPanel } from './DocumentsPanel';
 import { NoteList } from './NoteList';
+
+export type ArchiveSection = 'documents' | 'notes';
 
 export type ArchivePane = { kind: 'empty' } | { kind: 'new' } | { kind: 'note'; id: number };
 
 interface ArchiveViewProps {
+  section: ArchiveSection;
+  onSectionChange: (section: ArchiveSection) => void;
   pane: ArchivePane;
   onPaneChange: (pane: ArchivePane) => void;
   draft: NoteDraft;
@@ -22,6 +27,8 @@ interface ArchiveViewProps {
 }
 
 export function ArchiveView({
+  section,
+  onSectionChange,
   pane,
   onPaneChange,
   draft,
@@ -67,51 +74,65 @@ export function ArchiveView({
       <header className="view-header">
         <div>
           <h1 id="archive-title">Archive</h1>
-          <p className="view-subtitle">Notes stored on this device, available with no network.</p>
+          <p className="view-subtitle">
+            Documents and notes kept in local storage, available with no network.
+          </p>
         </div>
-        <span className="pill pill-demo">Sprint 001 demo</span>
       </header>
 
-      <p className="callout">
-        Plain-text notes are a first working record type. Importing documents and searching them are
-        not implemented yet.
-      </p>
-
-      <div className="archive-layout">
-        <NoteList
-          notes={notes}
-          error={listError}
-          selectedId={pane.kind === 'note' ? pane.id : null}
-          creating={pane.kind === 'new'}
-          onSelect={(id) => onPaneChange({ kind: 'note', id })}
-          onNew={() => onPaneChange({ kind: 'new' })}
-          onRetry={reload}
-        />
-
-        <div className="archive-pane">
-          {pane.kind === 'new' ? (
-            <NoteForm
-              draft={draft}
-              onDraftChange={onDraftChange}
-              onSave={onSave}
-              saving={saving}
-              saveError={saveError}
-              onCancel={handleCancel}
-            />
-          ) : null}
-          {pane.kind === 'note' ? <NoteDetail key={pane.id} id={pane.id} /> : null}
-          {pane.kind === 'empty' ? (
-            <div className="empty-state">
-              <h2>{notes && notes.length > 0 ? 'Select a note' : 'Start with a note'}</h2>
-              <p className="muted">
-                {notes && notes.length > 0
-                  ? 'Choose a note from the list, or create a new one.'
-                  : 'Create your first note. It is saved on this computer and is still here after you close and reopen BEACON.'}
-              </p>
-            </div>
-          ) : null}
-        </div>
+      <div className="section-switch" role="group" aria-label="Archive sections">
+        {(['documents', 'notes'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            className="button"
+            aria-pressed={section === id}
+            onClick={() => onSectionChange(id)}
+          >
+            {id === 'documents' ? 'Documents' : 'Notes'}
+          </button>
+        ))}
       </div>
+
+      {section === 'documents' ? (
+        <DocumentsPanel />
+      ) : (
+        <div className="archive-layout">
+          <NoteList
+            notes={notes}
+            error={listError}
+            selectedId={pane.kind === 'note' ? pane.id : null}
+            creating={pane.kind === 'new'}
+            onSelect={(id) => onPaneChange({ kind: 'note', id })}
+            onNew={() => onPaneChange({ kind: 'new' })}
+            onRetry={reload}
+          />
+
+          <div className="archive-pane">
+            {pane.kind === 'new' ? (
+              <NoteForm
+                draft={draft}
+                onDraftChange={onDraftChange}
+                onSave={onSave}
+                saving={saving}
+                saveError={saveError}
+                onCancel={handleCancel}
+              />
+            ) : null}
+            {pane.kind === 'note' ? <NoteDetail key={pane.id} id={pane.id} /> : null}
+            {pane.kind === 'empty' ? (
+              <div className="empty-state">
+                <h2>{notes && notes.length > 0 ? 'Select a note' : 'Start with a note'}</h2>
+                <p className="muted">
+                  {notes && notes.length > 0
+                    ? 'Choose a note from the list, or create a new one.'
+                    : 'Create your first note. It is saved on this computer and is still here after you close and reopen BEACON.'}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

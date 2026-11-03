@@ -2,12 +2,17 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::time::Duration;
 
 use rusqlite::Connection;
 use serde::Serialize;
 
 use crate::db::{self, migrations};
+use crate::documents;
 use crate::error::{AppError, Result};
+
+/// Temporary files younger than this may belong to a write still in progress.
+const STALE_TEMP_FILE_AGE: Duration = Duration::from_secs(300);
 
 pub struct AppState {
     data_dir: PathBuf,
@@ -34,7 +39,11 @@ impl AppState {
             .map_err(AppError::from)
             .and_then(|()| db::open_and_migrate(&data_dir.join(db::DB_FILE_NAME)));
         let db = match opened {
-            Ok(conn) => Ok(Mutex::new(conn)),
+            Ok(conn) => {
+                // Remove half-written files from an interrupted import (best effort).
+                documents::sweep_stale_temp_files(&data_dir, STALE_TEMP_FILE_AGE);
+                Ok(Mutex::new(conn))
+            }
             Err(error) => {
                 // Initialization errors mention files and SQL, never note content.
                 eprintln!("BEACON: database initialization failed: {error}");
