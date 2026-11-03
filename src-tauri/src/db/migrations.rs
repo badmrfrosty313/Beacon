@@ -20,11 +20,18 @@ pub struct Migration {
 }
 
 /// All known migrations, in order. Versions must start at 1 and increase by exactly 1.
-pub const MIGRATIONS: &[Migration] = &[Migration {
-    version: 1,
-    name: "create_notes",
-    sql: include_str!("../../migrations/0001_create_notes.sql"),
-}];
+pub const MIGRATIONS: &[Migration] = &[
+    Migration {
+        version: 1,
+        name: "create_notes",
+        sql: include_str!("../../migrations/0001_create_notes.sql"),
+    },
+    Migration {
+        version: 2,
+        name: "create_documents_fts",
+        sql: include_str!("../../migrations/0002_create_documents.sql"),
+    },
+];
 
 /// The schema version this build of BEACON expects.
 pub fn latest_version() -> i64 {

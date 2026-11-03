@@ -30,6 +30,8 @@ pub enum AppError {
     Unavailable(String),
     #[error("internal error")]
     Internal,
+    #[error("archived original failed its integrity check")]
+    Integrity,
 }
 
 impl From<ValidationError> for AppError {
@@ -49,6 +51,7 @@ impl AppError {
             Self::Migration(_) => "migration",
             Self::Unavailable(_) => "unavailable",
             Self::Internal => "internal",
+            Self::Integrity => "integrity",
         }
     }
 
@@ -67,6 +70,7 @@ impl AppError {
                 format!("BEACON could not open its local database: {detail}")
             }
             Self::Internal => "BEACON hit an unexpected internal error.".to_owned(),
+            Self::Integrity => "An archived original failed its SHA-256 integrity check.".to_owned(),
         }
     }
 }
@@ -143,6 +147,7 @@ mod tests {
             AppError::Migration(String::new()).code(),
             AppError::Unavailable(String::new()).code(),
             AppError::Internal.code(),
+            AppError::Integrity.code(),
         ];
         let mut sorted = codes.to_vec();
         sorted.sort_unstable();
