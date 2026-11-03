@@ -4,10 +4,11 @@ BEACON's core promise is that it works with no network. This document defines ho
 checked. There are two layers: an **automated guard** that runs on every `npm test`, and a
 **manual airplane-mode procedure** that must be performed on a real Windows machine.
 
-> **Status of this PR (Sprint 001):** the automated guard passes in Vitest on the Windows CI
-> runner (run 41492735401). It is a static check plus a jsdom test with a fake backend; it
-> does not observe the real app's traffic. The manual airplane-mode procedure below has **not
-> been performed**. Record results in the table at the end when it is.
+> **Status (November 2, 2026):** automated offline guards pass on Windows CI.
+> The owner has also confirmed the downloaded native Windows application launches and that a
+> saved note persists after restart ([run 41550072221](https://github.com/badmrfrosty313/Beacon/actions/runs/41550072221)).
+> **Airplane-mode testing was not explicitly reported**. The offline acceptance check remains
+> open until the network-disconnected scenario below is confirmed.
 
 ## 1. Automated guard
 
@@ -77,4 +78,4 @@ Add a row each time the manual procedure is performed.
 
 | Date | Tester | OS build | BEACON commit | Steps 1-8 pass? | Notes |
 | ---- | ------ | -------- | ------------- | --------------- | ----- |
-|      |        |          |               | _not yet run_   |       |
+| 2026-11-02 | Owner | Windows (build unspecified) | `a5f0766` | **Partial / offline unconfirmed** | Native EXE launched; user confirmed save persisted across app restart. Did not explicitly report airplane mode, clean data-dir launch, navigation and validation steps. |

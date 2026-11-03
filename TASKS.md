@@ -5,30 +5,25 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 ## Sprint 001: First Light Foundation
 **Objective:** Launch a working offline Windows app that can persist a simple record. Prefer a thin vertical slice over an elaborate scaffold.
 
-> **Sprint 001 status: CI-verified, NOT manually verified.** Code for B-001 to B-005 is in [PR #1](https://github.com/badmrfrosty313/Beacon/pull/1) (draft). [CI run 41492735401](https://github.com/badmrfrosty313/Beacon/actions/runs/41492735401) on a GitHub Actions `windows-latest` runner (commit `3707417`) passed every step: Prettier, ESLint, `tsc`, Vitest (67 tests, 4 files), `cargo fmt --check`, `cargo test` (35 unit + 4 integration), `cargo clippy -D warnings`, and `tauri build --no-bundle` (release binary compiled). **Not done:** a person launching the app, restart-persistence in the real app, the airplane-mode procedure, any lockfile commit, Android. Frontend tests use a fake backend. Boxes stay unchecked until the manual acceptance criteria are met.
+> **Sprint 001 status (2026-11-02): Windows launch and saved-note restart persistence MANUALLY CONFIRMED by the owner.** Both [Sprint 001 PR #1](https://github.com/badmrfrosty313/Beacon/pull/1) and [browser harness PR #3](https://github.com/badmrfrosty313/Beacon/pull/3) are merged. The owner ran the unsigned native executable from [successful Windows CI run 41550072221](https://github.com/badmrfrosty313/Beacon/actions/runs/41550072221) (commit `a5f0766`) and reported that the application works and a saved note survives restarting it. The hosted browser demo also passed owner-confirmed create/save/reload persistence. **Not explicitly confirmed:** the manual disconnected-network / airplane-mode test, a clean app-data-folder cold start, and specific validation/navigation checks. Do not treat those as passed until separately reported.
 
-- [ ] **B-001: Scaffold project.** Tauri 2 + Vite/React + TypeScript + Rust. Document prerequisites, scripts and how to start a dev build.
-  - Accept: a clean checkout can build and open a working desktop window.
-  - Status: **CI-verified:** `npm install`, `tsc`, release `cargo` build via `tauri build --no-bundle` succeed on Windows (run 41492735401). **Not verified:** `tauri dev`; a window actually opening (the release binary was built, never started). Acceptance **partly met** (builds; launch unconfirmed).
-- [ ] **B-002: Initialize SQLite.** OS-appropriate app-data directory, migration runner, minimal versioned schema, error handling.
-  - Accept: database initializes at first launch, reopens without data loss, migration tests pass.
-  - Status: **CI-verified:** `cargo test` on Windows passed 35 unit + 4 integration tests, covering migrations, rollback, refusal of a newer database, and data surviving closing and reopening a database file (`src-tauri/tests/persistence.rs`). **Not verified:** DB creation in the real `%APPDATA%` directory by the running app. Acceptance **mostly met by automated tests; real-app check outstanding**.
-- [ ] **B-003: Offline smoke test.** Ensure first launch and basic navigation perform no required network or authentication calls.
-  - Accept: manual airplane-mode verification and a documented reproducible test.
-  - Status: **CI-verified:** the static + runtime offline guard (`src/test/offlineGuard.test.ts`, 16 tests) and the no-network test in `src/App.test.tsx` pass in Vitest/jsdom against a fake backend. Earlier sandbox run: real UI under the production CSP in headless Chromium with a mock backend, 0 external requests (throwaway harness, not committed). **Not done:** the manual airplane-mode procedure ([docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md)). Acceptance **not met** (manual part required).
-- [ ] **B-004: Basic persistent record.** Create/list a local demo note or document metadata record using a Tauri command.
-  - Accept: record persists through restart; input validation and failure behavior tested.
-  - Status: **CI-verified:** note validation, create/list/get against SQLite, and persistence across reopening the database pass in `cargo test`; UI create/view/validation/error flows pass in Vitest with a **fake** backend. **Not verified:** create, view and restart-persistence in the running desktop app (Tauri IPC end to end). Acceptance **not met** until that is done by hand.
-- [ ] **B-005: Foundation quality gates.** Formatting, linting, frontend unit tests, Rust tests, and CI compatible with actual project scripts.
-  - Accept: checks documented and passing; mark unavailable platform tests clearly.
-  - Status: **CI-verified:** the workflow runs on Windows and every gate (Prettier, ESLint, tsc, Vitest, rustfmt, cargo test, clippy `-D warnings`, release build) passed in run 41492735401 after one fix (Prettier version differences, `.gitattributes` LF). Caveat: dependencies are not pinned (no lockfiles). Acceptance **met except pinning** (CI uses `npm install`).
+- [x] **B-001: Scaffold project.** Tauri 2 + Vite/React + TypeScript + Rust.
+  - Windows CI builds the native release binary; owner confirmed the downloaded executable opens as a desktop app. `tauri dev` itself was not separately tested by the owner.
+- [x] **B-002: Initialize SQLite.** OS-appropriate app-data directory, migration runner, versioned schema and error handling.
+  - Automated Rust migration/persistence tests passed (35 unit + 4 integration). User-confirmed native note persistence indicates working database storage. Exact displayed app-data folder and clean first-launch migration remain unobserved.
+- [ ] **B-003: Offline smoke test.** No required network or authentication on initial launch, navigation or note save.
+  - Static/jsdom offline tests pass, but owner has **not explicitly confirmed disconnecting from the network** for the native test. Complete [docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md) to close this gate.
+- [x] **B-004: Basic persistent record.** Create/list and reopen a local note via Tauri IPC and SQLite.
+  - Owner confirmed save and persistence after restarting the native Windows app downloaded from CI; validation/failure behavior additionally covered by automated tests. This is distinct from browser IndexedDB testing.
+- [x] **B-005: Foundation quality gates.** Formatting, linting, TypeScript, frontend tests, Rust tests and Windows binary compile.
+  - [Windows CI run 41550072221](https://github.com/badmrfrosty313/Beacon/actions/runs/41550072221) passed and published a test EXE plus SHA-256 checksum. **Follow-up:** package/Cargo lockfiles are not yet committed and CI still uses `npm install` rather than `npm ci`.
 
-### Sprint 001 follow-ups (required before the boxes above can be checked)
-1. Commit `package-lock.json` and `src-tauri/Cargo.lock` (generated by a networked `npm install` / `cargo build`; CI did not commit them), then switch CI to `npm ci`.
-2. On Windows: `npm run tauri dev`; confirm the window opens, create a note, close, reopen, confirm it persists (steps in README).
-3. Perform the manual airplane-mode procedure and record it in the results table in `docs/OFFLINE-VERIFICATION.md`.
-4. Consider a cross-language contract test for command names and argument keys (see ADR-010); today it is covered only by a TS test of command names.
-5. CI emits a Node 20 action deprecation warning (`actions/checkout@v4`, `setup-node@v4`); bump when v5 is confirmed.
+### Sprint 001 follow-ups
+1. **Confirm the native airplane-mode test** on Windows and record its result in [docs/OFFLINE-VERIFICATION.md](docs/OFFLINE-VERIFICATION.md). This is the last major hands-on Week 1 gate, not implied by a successful online launch.
+2. Commit `package-lock.json` and `src-tauri/Cargo.lock`, then switch CI to `npm ci` for reproducible dependency resolution.
+3. Document a clean app-data-folder first launch and the schema/version shown in native Settings.
+4. Consider a cross-language IPC contract test (ADR-010).
+5. Update GitHub-owned Node 20 actions to v5 when confirmed.
 
 ## Sprint 002: Archive
 - [ ] **B-006:** Import bounded UTF-8 .md and .txt as untrusted files; preserve originals and SHA-256 hashes.
@@ -65,7 +60,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 - Update [DECISIONS.md](DECISIONS.md) when a major technical decision changes.
 
 ## Developer UX: Browser Harness (issue #2)
-- [ ] **DEV-001: Browser demo** via explicit Vite browser-demo mode, separate IndexedDB API and prominent warning.
-- [ ] **DEV-002: CI + GitHub Pages preview** builds static assets; hosting requires configured Pages and successful deployment.
-- [ ] **DEV-003: Browser check** open preview, create note, refresh and confirm browser persistence (not native persistence).
-- Scope: development/testing convenience only. Does **not** substitute for Sprint 001 real Windows launch, Tauri IPC, or airplane-mode gates.
+- [x] **DEV-001: Browser demo** via explicit Vite browser-demo mode, separate IndexedDB API and prominent warning.
+- [x] **DEV-002: CI + GitHub Pages preview** built and deployed successfully at https://badmrfrosty313.github.io/Beacon/ .
+- [x] **DEV-003: Browser persistence test.** Owner confirmed a saved demo note survived refreshing the page.
+- Scope: development/testing convenience only. Browser IndexedDB persistence is distinct from the separately confirmed native SQLite restart persistence. Full offline testing is still pending.
