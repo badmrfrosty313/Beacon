@@ -570,7 +570,10 @@ mod tests {
         // The retained bytes remain reusable after the database problem is fixed.
         conn.execute_batch("DROP TRIGGER fail_insert").unwrap();
         let imported = import(&conn, dir.path(), "x.txt", bytes).unwrap();
-        assert_eq!(get(&conn, dir.path(), imported.metadata.id).unwrap().body, "will not be recorded");
+        assert_eq!(
+            get(&conn, dir.path(), imported.metadata.id).unwrap().body,
+            "will not be recorded"
+        );
     }
 
     #[test]
@@ -585,18 +588,18 @@ mod tests {
         // Simulate two distinct app processes deterministically:
         // A stages the file, B sees the same file and commits its own row,
         // A's INSERT then collides with the UNIQUE sha256 constraint.
-        let raced = import_with_before_insert(
-            &first,
-            dir.path(),
-            "instance-a.txt",
-            bytes,
-            || {
-                let doc = import(&second, dir.path(), "instance-b.txt", bytes).unwrap();
-                committed_id = Some(doc.metadata.id);
-            },
-        );
+        let raced = import_with_before_insert(&first, dir.path(), "instance-a.txt", bytes, || {
+            let doc = import(&second, dir.path(), "instance-b.txt", bytes).unwrap();
+            committed_id = Some(doc.metadata.id);
+        });
 
-        assert!(matches!(raced, Err(AppError::Duplicate { restored: false, .. })));
+        assert!(matches!(
+            raced,
+            Err(AppError::Duplicate {
+                restored: false,
+                ..
+            })
+        ));
         let committed_id = committed_id.expect("second connection committed a document");
         assert_eq!(list(&second).unwrap().len(), 1);
         assert_eq!(
