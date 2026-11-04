@@ -7,9 +7,7 @@ import { formatTimestamp } from '../../lib/format';
 import { extractReferences } from '../scripture/referenceNote';
 
 type LoadState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; note: Note };
+  { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; note: Note };
 
 /**
  * Shows one note. Render with `key={id}` so state resets when the selection changes.

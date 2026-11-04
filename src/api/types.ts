@@ -133,8 +133,7 @@ export interface ReferenceProblem {
 
 /** An unusable reference is an expected outcome, reported as data rather than an error. */
 export type LookupResult =
-  | { ok: true; passage: ScripturePassage }
-  | { ok: false; problem: ReferenceProblem };
+  { ok: true; passage: ScripturePassage } | { ok: false; problem: ReferenceProblem };
 
 export type ApiErrorCode =
   | 'validation'
