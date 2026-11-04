@@ -8,6 +8,7 @@ use tauri::State;
 use crate::documents::{self, Document, DocumentSummary, SearchHit};
 use crate::error::Result;
 use crate::notes::{self, Note, NoteSummary};
+use crate::scripture::{self, LookupResult, ScriptureOverview, ScripturePassage};
 use crate::state::{AppInfo, AppState};
 
 #[tauri::command]
@@ -52,4 +53,23 @@ pub fn get_document(state: State<'_, AppState>, id: i64) -> Result<Document> {
 #[tauri::command]
 pub fn search_documents(state: State<'_, AppState>, query: String) -> Result<Vec<SearchHit>> {
     state.with_db(|conn| documents::search(conn, &query))
+}
+
+#[tauri::command]
+pub fn scripture_overview(state: State<'_, AppState>) -> Result<ScriptureOverview> {
+    state.with_scripture(|_, index| Ok(scripture::overview(index)))
+}
+
+#[tauri::command]
+pub fn scripture_lookup(state: State<'_, AppState>, input: String) -> Result<LookupResult> {
+    state.with_scripture(|conn, index| scripture::lookup(conn, index, &input))
+}
+
+#[tauri::command]
+pub fn scripture_chapter(
+    state: State<'_, AppState>,
+    book_id: String,
+    chapter: u32,
+) -> Result<ScripturePassage> {
+    state.with_scripture(|conn, index| scripture::chapter(conn, index, &book_id, chapter))
 }

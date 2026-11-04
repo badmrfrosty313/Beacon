@@ -6,7 +6,7 @@ import { ApiError } from './api/types';
 import { DEFAULT_INFO, createFakeApi, note, renderApp, renderNotes } from './test/fakeApi';
 
 describe('navigation and branding', () => {
-  it('shows the PROJECT BEACON brand and the four modules', () => {
+  it('shows the PROJECT BEACON brand and the five modules', () => {
     renderApp();
     expect(screen.getByText('PROJECT')).toBeInTheDocument();
     expect(screen.getByText('BEACON')).toBeInTheDocument();
@@ -15,7 +15,7 @@ describe('navigation and branding', () => {
     const labels = within(nav)
       .getAllByRole('button')
       .map((button) => button.querySelector('.nav-label')?.textContent);
-    expect(labels).toEqual(['Archive', 'Watchtower', 'Lifeline', 'Settings']);
+    expect(labels).toEqual(['Archive', 'Scripture', 'Watchtower', 'Lifeline', 'Settings']);
   });
 
   it('starts on Archive and marks it as the current page', () => {
@@ -426,7 +426,7 @@ describe('offline behaviour', () => {
       const user = userEvent.setup();
       renderNotes();
 
-      for (const name of ['Watchtower', 'Lifeline', 'Settings', 'Archive']) {
+      for (const name of ['Scripture', 'Watchtower', 'Lifeline', 'Settings', 'Archive']) {
         await user.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
       }
       await user.click(await screen.findByRole('button', { name: 'New note' }));

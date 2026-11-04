@@ -3,6 +3,8 @@
 //! Layering (see ARCHITECTURE.md):
 //! * `commands`: thin Tauri IPC surface, the only thing the frontend can reach.
 //! * `notes`: Sprint 001 demo record (validation + SQL).
+//! * `documents`: imported text originals, FTS5 search.
+//! * `scripture`: read-only packaged Scripture reference data and reference lookup.
 //! * `db`: connection setup and versioned migrations.
 //! * `state`: data directory + connection lifecycle.
 //!
@@ -13,6 +15,7 @@ pub mod db;
 pub mod documents;
 pub mod error;
 pub mod notes;
+pub mod scripture;
 pub mod state;
 
 use tauri::Manager;
@@ -36,6 +39,9 @@ pub fn run() {
             commands::list_documents,
             commands::get_document,
             commands::search_documents,
+            commands::scripture_overview,
+            commands::scripture_lookup,
+            commands::scripture_chapter,
         ])
         .run(tauri::generate_context!())
         .expect("error while running PROJECT BEACON");

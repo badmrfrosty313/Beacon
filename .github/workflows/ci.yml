@@ -67,6 +67,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm test
 
+      # Rebuilds the packaged Scripture files from the pinned official ZIP and fails if the
+      # committed files differ (also re-checks the ZIP hash, the 70-file manifest and totals).
+      - name: Verify packaged Scripture data
+        if: ${{ !cancelled() }}
+        run: npm run scripture:verify
+
       - name: Rust format
         if: ${{ !cancelled() }}
         run: npm run rust:fmt
@@ -82,6 +88,15 @@ jobs:
       - name: Build the desktop binary (no installer)
         if: ${{ !cancelled() }}
         run: npm run tauri build -- --no-bundle
+
+      # The desktop app reads Scripture natively in Rust; the 4 MB browser-demo copy must not
+      # be duplicated into its web bundle.
+      - name: Desktop web bundle does not contain the browser-demo Scripture copy
+        if: ${{ success() }}
+        shell: pwsh
+        run: |
+          $hits = Get-ChildItem -Path dist -Recurse -File | Select-String -SimpleMatch -Pattern "In the beginning, God created the heavens"
+          if ($hits) { throw "Scripture text found in the desktop web bundle: $($hits.Path -join ', ')" }
 
       # A no-installer test executable. This stores its SQLite DB in the normal
       # per-user app data folder; it is not a portable-data or signed release.

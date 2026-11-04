@@ -73,4 +73,18 @@ The demo stores the original bytes and a SHA-256 in IndexedDB and re-verifies th
 document is opened. It holds at most 200 documents, and its data is separate from the desktop
 app's SQLite database. **Do not import confidential files into the hosted demo.**
 
+### Scripture in the browser demo (Sprint 003)
+
+11. Open **Scripture**. Choose Revelation, chapter 13, click verse number **18**, press **Copy reference**
+    (expect `Revelation 13:18`), then **Create note from reference** and **Save note**.
+12. In the saved note, press **Open Revelation 13:18 in Scripture** to return to the passage.
+13. Type `Rev 13:16-18`, `1 John 4:1`, `3 John 1:2` and `Psalm 23` into **Go to reference**; try `John 22`
+    and `Hezekiah 1` and expect a plain explanation, not a crash.
+14. Reload the page, open Scripture again (it resumes where you were), then switch the network off and
+    keep reading: the text is a same-origin file loaded once, with no external Bible service.
+
+The packaged text is the same verified data the desktop app uses. Existing notes and documents are
+untouched (no IndexedDB schema change). Without a service worker, a cold start with no network at all
+still needs the page itself to have been loaded before.
+
 Record these checks as browser-only, not native verification.

@@ -4,3 +4,9 @@
 
 *.png binary
 *.ico binary
+
+# Scripture source files must stay byte-identical to the official download (their SHA-256 is
+# pinned); the packaged TSV/meta are LF and must not be rewritten either.
+data/scripture/source/* -text
+data/scripture/*.tsv -text
+data/scripture/*.meta.txt -text

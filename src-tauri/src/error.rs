@@ -36,6 +36,10 @@ pub enum AppError {
     /// had been lost or damaged and this import repaired it.
     #[error("duplicate document")]
     Duplicate { title: String, restored: bool },
+    /// The packaged Scripture text could not be installed or failed verification. Notes and
+    /// documents keep working; only the Scripture reader is affected.
+    #[error("scripture data unavailable: {0}")]
+    ScriptureUnavailable(String),
 }
 
 impl From<ValidationError> for AppError {
@@ -57,6 +61,7 @@ impl AppError {
             Self::Internal => "internal",
             Self::Integrity => "integrity",
             Self::Duplicate { .. } => "duplicate",
+            Self::ScriptureUnavailable(_) => "scripture_unavailable",
         }
     }
 
@@ -78,6 +83,9 @@ impl AppError {
             Self::Integrity => {
                 "An archived original is missing or failed its SHA-256 integrity check.".to_owned()
             }
+            Self::ScriptureUnavailable(detail) => format!(
+                "The Scripture reference data is unavailable ({detail}). Your notes and documents are not affected."
+            ),
             Self::Duplicate { title, restored } => {
                 let mut message = format!("This file is already in your library as \u{201c}{title}\u{201d}.");
                 if *restored {
@@ -170,6 +178,17 @@ mod tests {
     }
 
     #[test]
+    fn scripture_unavailable_is_reported_without_blaming_user_data() {
+        let json = to_json(&AppError::ScriptureUnavailable(
+            "checksum mismatch".to_owned(),
+        ));
+        assert_eq!(json["code"], "scripture_unavailable");
+        let message = json["message"].as_str().unwrap();
+        assert!(message.contains("checksum mismatch"));
+        assert!(message.contains("notes and documents are not affected"));
+    }
+
+    #[test]
     fn integrity_errors_do_not_leak_paths() {
         let json = to_json(&AppError::Integrity);
         assert_eq!(json["code"], "integrity");
@@ -192,6 +211,7 @@ mod tests {
                 restored: false,
             }
             .code(),
+            AppError::ScriptureUnavailable(String::new()).code(),
         ];
         let mut sorted = codes.to_vec();
         sorted.sort_unstable();

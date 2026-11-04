@@ -7,8 +7,11 @@ import {
   type AppInfo,
   type Document,
   type DocumentSummary,
+  type LookupResult,
   type Note,
   type NoteSummary,
+  type ScriptureOverview,
+  type ScripturePassage,
   type SearchHit,
 } from './types';
 
@@ -54,5 +57,9 @@ export function createTauriApi(invokeFn: InvokeFn = guardedInvoke): BeaconApi {
     listDocuments: () => call<DocumentSummary[]>('list_documents'),
     getDocument: (id) => call<Document>('get_document', { id }),
     searchDocuments: (query) => call<SearchHit[]>('search_documents', { query }),
+    getScriptureOverview: () => call<ScriptureOverview>('scripture_overview'),
+    lookupScripture: (input) => call<LookupResult>('scripture_lookup', { input }),
+    getScriptureChapter: (bookId, chapter) =>
+      call<ScripturePassage>('scripture_chapter', { bookId, chapter }),
   };
 }

@@ -4,8 +4,11 @@ import {
   type Document,
   type DocumentSummary,
   type ImportDocument,
+  type LookupResult,
   type Note,
   type NoteSummary,
+  type ScriptureOverview,
+  type ScripturePassage,
   type SearchHit,
 } from './types';
 import { validateDocument, validateContent } from '../lib/documentValidation';
@@ -16,6 +19,7 @@ import {
   QueryRejection,
   parseSearchQuery,
 } from '../lib/searchQuery';
+import { loadScriptureEngine } from '../lib/scripture/packaged';
 import { sha256Hex } from '../lib/sha256';
 import { validateNote } from '../lib/validation';
 
@@ -420,6 +424,19 @@ export function createBrowserDemoApi(): BeaconApi {
           snippet,
           importedAt: doc.importedAt,
         }));
+    },
+    // Scripture is read-only reference data bundled with the demo, not stored in IndexedDB, so
+    // none of it can touch (or be lost with) the user's notes and documents.
+    async getScriptureOverview(): Promise<ScriptureOverview> {
+      return (await loadScriptureEngine()).overview();
+    },
+    async lookupScripture(input: string): Promise<LookupResult> {
+      return (await loadScriptureEngine()).lookup(String(input));
+    },
+    async getScriptureChapter(bookId: string, chapter: number): Promise<ScripturePassage> {
+      const passage = (await loadScriptureEngine()).chapter(String(bookId), chapter);
+      if (passage === null) throw new ApiError('not_found', 'That item could not be found.');
+      return passage;
     },
   };
 }

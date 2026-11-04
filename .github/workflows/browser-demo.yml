@@ -36,8 +36,14 @@ jobs:
           npm run lint
       - name: Test browser adapter and UI
         run: npm test
+      - name: Verify packaged Scripture data
+        run: npm run scripture:verify
       - name: Build browser-only preview
         run: npm run build:demo
+      - name: Demo bundle ships the Scripture text locally (no external service)
+        run: |
+          grep -rlq "In the beginning, God created the heavens" dist/assets
+          ! grep -rEq "(api\.)?(bible-api|biblegateway|bible\.com|getbible|esv\.org|labs\.bible)" dist
       - uses: actions/upload-artifact@v4
         with:
           name: beacon-browser-demo

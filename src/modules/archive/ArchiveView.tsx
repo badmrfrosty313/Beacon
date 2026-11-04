@@ -24,6 +24,8 @@ interface ArchiveViewProps {
   saving: boolean;
   saveError: string | null;
   refreshRevision: number;
+  /** Opens a Scripture reference found in a note; omit to hide those links. */
+  onOpenScripture?: (reference: string) => void;
 }
 
 export function ArchiveView({
@@ -38,6 +40,7 @@ export function ArchiveView({
   saving,
   saveError,
   refreshRevision,
+  onOpenScripture,
 }: ArchiveViewProps) {
   const api = useApi();
   const [notes, setNotes] = useState<NoteSummary[] | null>(null);
@@ -119,7 +122,9 @@ export function ArchiveView({
                 onCancel={handleCancel}
               />
             ) : null}
-            {pane.kind === 'note' ? <NoteDetail key={pane.id} id={pane.id} /> : null}
+            {pane.kind === 'note' ? (
+              <NoteDetail key={pane.id} id={pane.id} onOpenScripture={onOpenScripture} />
+            ) : null}
             {pane.kind === 'empty' ? (
               <div className="empty-state">
                 <h2>{notes && notes.length > 0 ? 'Select a note' : 'Start with a note'}</h2>
