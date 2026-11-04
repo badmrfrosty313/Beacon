@@ -214,6 +214,32 @@ describe('Revelation 13:18 workflow (definition of done)', () => {
     expect(await navigator.clipboard.readText()).toBe('Revelation 13:16-18');
   });
 
+  it('resumes at the reader position, not a stale note link, after creating a note', async () => {
+    const user = userEvent.setup();
+    renderApp(
+      createFakeApi([
+        {
+          id: 1,
+          title: 'Linked',
+          body: 'Scripture reference: Genesis 1:1 (WEB)\n\nMy notes:\n',
+          createdAt: '2026-11-04T12:00:00Z',
+        },
+      ]),
+    );
+    await user.click(screen.getByRole('button', { name: 'Notes' }));
+    await user.click(await screen.findByRole('button', { name: /Linked/ }));
+    await user.click(await screen.findByRole('button', { name: 'Open Genesis 1:1 in Scripture' }));
+    await screen.findByRole('heading', { level: 2, name: 'Genesis 1:1' });
+
+    await goTo(user, 'Psalm 23');
+    await screen.findByRole('heading', { level: 2, name: 'Psalm 23' });
+    await user.click(screen.getByRole('button', { name: 'Create note from reference' }));
+    await screen.findByLabelText('Title');
+
+    await user.click(screen.getByRole('button', { name: /^Scripture/ }));
+    expect(await screen.findByRole('heading', { level: 2, name: 'Psalm 23' })).toBeVisible();
+  });
+
   it('does not overwrite an unsaved note draft', async () => {
     const user = userEvent.setup();
     renderApp();

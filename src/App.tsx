@@ -123,12 +123,16 @@ export default function App({
 
   function createNoteFromReference(seed: NoteSeed) {
     dispatch({ type: 'prefill', seed });
+    // Leaving Scripture: drop any pending open-request so returning resumes the reader's
+    // saved position instead of reopening a stale reference.
+    setScriptureRequest(null);
     setArchiveSection('notes');
     setActive('archive');
   }
 
   function openUnsavedDraft() {
     dispatch({ type: 'select', pane: { kind: 'new' } });
+    setScriptureRequest(null);
     setArchiveSection('notes');
     setActive('archive');
   }
