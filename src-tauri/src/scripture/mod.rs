@@ -632,16 +632,24 @@ mod tests {
 
     #[test]
     fn installs_the_complete_bible_and_is_idempotent() {
+        fn count(conn: &Connection, sql: &str) -> i64 {
+            conn.query_row(sql, [], |r| r.get(0)).unwrap()
+        }
         let (mut conn, index) = installed();
-        let count = |sql: &str| -> i64 { conn.query_row(sql, [], |r| r.get(0)).unwrap() };
-        assert_eq!(count("SELECT COUNT(*) FROM scripture_books"), 66);
-        assert_eq!(count("SELECT COUNT(*) FROM scripture_chapters"), 1189);
-        assert_eq!(count("SELECT COUNT(*) FROM scripture_verses"), 31103);
-        assert_eq!(count("SELECT COUNT(*) FROM scripture_translations"), 1);
+        assert_eq!(count(&conn, "SELECT COUNT(*) FROM scripture_books"), 66);
+        assert_eq!(
+            count(&conn, "SELECT COUNT(*) FROM scripture_chapters"),
+            1189
+        );
+        assert_eq!(count(&conn, "SELECT COUNT(*) FROM scripture_verses"), 31103);
+        assert_eq!(
+            count(&conn, "SELECT COUNT(*) FROM scripture_translations"),
+            1
+        );
         assert_eq!(index.translation.verse_count, 31103);
 
         install(&mut conn).unwrap();
-        assert_eq!(count("SELECT COUNT(*) FROM scripture_verses"), 31103);
+        assert_eq!(count(&conn, "SELECT COUNT(*) FROM scripture_verses"), 31103);
     }
 
     #[test]
