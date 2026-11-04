@@ -783,3 +783,242 @@ textarea {
 .browser-demo-notice strong {
   letter-spacing: 0.08em;
 }
+
+/* ---------- Scripture reader ---------- */
+
+.translation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.translation-abbr {
+  padding: 1px 8px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.translation-name {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.scripture-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.scripture-lookup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scripture-lookup-row {
+  display: flex;
+  gap: 8px;
+}
+
+.scripture-lookup-row input,
+.scripture-pickers select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+
+.scripture-pickers {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.scripture-pickers select {
+  color: var(--text);
+}
+
+.passage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.passage-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.passage-header h2 {
+  font-size: 1.5rem;
+  outline: none;
+}
+
+.chapter-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chapter-heading {
+  margin: 14px 0 4px;
+  color: var(--accent-strong);
+  font-size: 1rem;
+}
+
+.superscription {
+  margin: 4px 0 10px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.verses {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.verse {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  align-items: baseline;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.verse-selected {
+  background: var(--accent-soft);
+}
+
+.verse-number {
+  justify-self: start;
+  min-width: 2rem;
+  padding: 0 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--accent-strong);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.verse-number:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.verse-number[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Poetry lines inside one verse are kept as line breaks. */
+.verse-text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.verse-missing {
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+.passage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.copy-status {
+  min-height: 1.4em;
+  font-size: 0.88rem;
+}
+
+.link-button {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.scripture-about {
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.scripture-about summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.note-references {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.note-references h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .scripture-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content {
+    padding: 20px 16px 24px;
+  }
+
+  .view-header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .passage {
+    padding: 14px 12px;
+  }
+
+  .verse {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+  }
+
+  .chapter-nav .button {
+    flex: 1;
+    padding-inline: 8px;
+  }
+}

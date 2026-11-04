@@ -9,14 +9,18 @@ import {
   type Document,
   type DocumentSummary,
   type ImportDocument,
+  type LookupResult,
   type NewNote,
   type Note,
   type NoteSummary,
+  type ScriptureOverview,
+  type ScripturePassage,
   type SearchHit,
 } from '../api/types';
 import { validateDocument } from '../lib/documentValidation';
 import { MATCH_END, MATCH_START, parseSearchQuery } from '../lib/searchQuery';
 import { sha256Hex } from '../lib/sha256';
+import { testScriptureEngine } from './scriptureEngine';
 
 function summaryOf(doc: Document): DocumentSummary {
   return {
@@ -122,6 +126,20 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
           return { id, title, format, snippet, importedAt };
         });
     }),
+    // Real packaged text through the same TypeScript engine the browser demo uses.
+    getScriptureOverview: vi.fn(async (): Promise<ScriptureOverview> =>
+      testScriptureEngine().overview(),
+    ),
+    lookupScripture: vi.fn(async (input: string): Promise<LookupResult> =>
+      testScriptureEngine().lookup(input),
+    ),
+    getScriptureChapter: vi.fn(
+      async (bookId: string, chapter: number): Promise<ScripturePassage> => {
+        const passage = testScriptureEngine().chapter(bookId, chapter);
+        if (!passage) throw new ApiError('not_found', 'That item could not be found.');
+        return passage;
+      },
+    ),
   };
 }
 

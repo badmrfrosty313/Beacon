@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useReducer, useRef, useState } from 'react';
 
 import { useApi } from './api/ApiContext';
 import { errorMessage } from './api/errors';
@@ -8,6 +8,8 @@ import { ArchiveView, type ArchivePane, type ArchiveSection } from './modules/ar
 import type { NoteDraft } from './modules/archive/NoteForm';
 import { LifelineView } from './modules/LifelineView';
 import type { ModuleId } from './modules/registry';
+import type { NoteSeed } from './modules/scripture/referenceNote';
+import { ScriptureView, type OpenRequest } from './modules/scripture/ScriptureView';
 import { SettingsView } from './modules/SettingsView';
 import { WatchtowerView } from './modules/WatchtowerView';
 
@@ -23,6 +25,7 @@ type ArchiveAction =
   | { type: 'select'; pane: ArchivePane }
   | { type: 'edit'; draft: NoteDraft }
   | { type: 'discard' }
+  | { type: 'prefill'; seed: NoteSeed }
   | { type: 'save-start'; revision: number }
   | { type: 'save-success'; revision: number; note: Note }
   | { type: 'save-failure'; revision: number; error: string };
@@ -56,6 +59,18 @@ function archiveReducer(state: ArchiveState, action: ArchiveAction): ArchiveStat
         draft: { title: '', body: '', revision: state.draft.revision + 1 },
         saveError: null,
       };
+    case 'prefill':
+      // Starting a note from a Scripture reference must never overwrite or discard what the
+      // user is already writing, nor interfere with a save in flight.
+      if (state.savingRevision !== null || state.draft.title !== '' || state.draft.body !== '') {
+        return state;
+      }
+      return {
+        ...state,
+        pane: { kind: 'new' },
+        draft: { ...action.seed, revision: state.draft.revision + 1 },
+        saveError: null,
+      };
     case 'save-start':
       if (state.savingRevision !== null || state.draft.revision !== action.revision) {
         return state;
@@ -87,6 +102,40 @@ export default function App({
   const [archiveSection, setArchiveSection] = useState<ArchiveSection>(initialArchiveSection);
   const [active, setActive] = useState<ModuleId>('archive');
   const [archive, dispatch] = useReducer(archiveReducer, initialArchiveState);
+  const [scriptureRequest, setScriptureRequest] = useState<OpenRequest | null>(null);
+  const requestCounter = useRef(0);
+
+  const noteDraftInProgress =
+    archive.savingRevision !== null || archive.draft.title !== '' || archive.draft.body !== '';
+
+  function selectModule(id: ModuleId) {
+    // A reference opened from a note applies once; leaving Scripture must not re-open it later
+    // over the user's own reading position.
+    if (id !== 'scripture') setScriptureRequest(null);
+    setActive(id);
+  }
+
+  function openScripture(reference: string) {
+    requestCounter.current += 1;
+    setScriptureRequest({ reference, nonce: requestCounter.current });
+    setActive('scripture');
+  }
+
+  function createNoteFromReference(seed: NoteSeed) {
+    dispatch({ type: 'prefill', seed });
+    // Leaving Scripture: drop any pending open-request so returning resumes the reader's
+    // saved position instead of reopening a stale reference.
+    setScriptureRequest(null);
+    setArchiveSection('notes');
+    setActive('archive');
+  }
+
+  function openUnsavedDraft() {
+    dispatch({ type: 'select', pane: { kind: 'new' } });
+    setScriptureRequest(null);
+    setArchiveSection('notes');
+    setActive('archive');
+  }
 
   async function handleSave(draft: NoteDraft) {
     if (archive.savingRevision !== null || draft.revision !== archive.draft.revision) return;
@@ -105,7 +154,7 @@ export default function App({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <Sidebar active={active} onSelect={setActive} />
+      <Sidebar active={active} onSelect={selectModule} />
       <main id="main" className="content" tabIndex={-1}>
         {import.meta.env.MODE === 'browser-demo' ? (
           <div role="status" className="browser-demo-notice">
@@ -127,6 +176,15 @@ export default function App({
             saving={archive.savingRevision !== null}
             saveError={archive.saveError}
             refreshRevision={archive.refreshRevision}
+            onOpenScripture={openScripture}
+          />
+        ) : null}
+        {active === 'scripture' ? (
+          <ScriptureView
+            openRequest={scriptureRequest}
+            onCreateNote={createNoteFromReference}
+            noteDraftInProgress={noteDraftInProgress}
+            onOpenDraft={openUnsavedDraft}
           />
         ) : null}
         {active === 'watchtower' ? <WatchtowerView /> : null}

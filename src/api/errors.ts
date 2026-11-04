@@ -10,6 +10,7 @@ const KNOWN_CODES: readonly ApiErrorCode[] = [
   'internal',
   'integrity',
   'duplicate',
+  'scripture_unavailable',
 ];
 
 /**

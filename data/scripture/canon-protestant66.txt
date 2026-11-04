@@ -1,0 +1,75 @@
+# BEACON canon definition: the 66-book Protestant canon.
+# One book per line, pipe-separated:
+#   USFM id | order | testament (OT/NT) | display name | citation name | aliases (comma-separated)
+# - citation name is used in canonical references; empty means "same as display name".
+# - aliases are in NORMALIZED form: lower case, no spaces or periods, a leading ordinal
+#   ("1", "I", "First", "1st" ...) already converted to a digit. The parser normalizes user input
+#   the same way and also accepts the display and citation names.
+# This file is read by both the Rust backend and the browser-demo/TypeScript code; a test
+# checks that the aliases are unique and that every book resolves.
+GEN|1|OT|Genesis||gen,ge,gn
+EXO|2|OT|Exodus||exod,exo,ex,exd
+LEV|3|OT|Leviticus||lev,le,lv
+NUM|4|OT|Numbers||num,nu,nm,nb
+DEU|5|OT|Deuteronomy||deut,deu,dt,de
+JOS|6|OT|Joshua||josh,jos,jsh
+JDG|7|OT|Judges||judg,jdg,jg,jdgs
+RUT|8|OT|Ruth||rut,ru,rth
+1SA|9|OT|1 Samuel||1sam,1sa,1sm,1s
+2SA|10|OT|2 Samuel||2sam,2sa,2sm,2s
+1KI|11|OT|1 Kings||1kgs,1ki,1kin,1k
+2KI|12|OT|2 Kings||2kgs,2ki,2kin,2k
+1CH|13|OT|1 Chronicles||1chron,1chr,1ch
+2CH|14|OT|2 Chronicles||2chron,2chr,2ch
+EZR|15|OT|Ezra||ezr
+NEH|16|OT|Nehemiah||neh,ne
+EST|17|OT|Esther||esth,est,es
+JOB|18|OT|Job||jb
+PSA|19|OT|Psalms|Psalm|psalm,pslm,psa,ps,psm,pss
+PRO|20|OT|Proverbs||prov,pro,prv,pr
+ECC|21|OT|Ecclesiastes||eccles,eccl,ecc,ec,qoh
+SNG|22|OT|Song of Solomon||songofsongs,song,sos,sng,sg,canticles,cant
+ISA|23|OT|Isaiah||isa,is
+JER|24|OT|Jeremiah||jer,je,jr
+LAM|25|OT|Lamentations||lam,la
+EZK|26|OT|Ezekiel||ezek,eze,ezk
+DAN|27|OT|Daniel||dan,da,dn
+HOS|28|OT|Hosea||hos,ho
+JOL|29|OT|Joel||jol,jl
+AMO|30|OT|Amos||amo,am
+OBA|31|OT|Obadiah||obad,oba,ob
+JON|32|OT|Jonah||jon,jnh
+MIC|33|OT|Micah||mic,mc
+NAM|34|OT|Nahum||nah,nam,na
+HAB|35|OT|Habakkuk||hab,hb
+ZEP|36|OT|Zephaniah||zeph,zep,zp
+HAG|37|OT|Haggai||hag,hg
+ZEC|38|OT|Zechariah||zech,zec,zc
+MAL|39|OT|Malachi||mal,ml
+MAT|40|NT|Matthew||matt,mat,mt
+MRK|41|NT|Mark||mrk,mar,mk,mr
+LUK|42|NT|Luke||luk,lk
+JHN|43|NT|John||jhn,joh,jn
+ACT|44|NT|Acts||act,ac
+ROM|45|NT|Romans||rom,ro,rm
+1CO|46|NT|1 Corinthians||1cor,1co
+2CO|47|NT|2 Corinthians||2cor,2co
+GAL|48|NT|Galatians||gal,ga
+EPH|49|NT|Ephesians||eph,ephes
+PHP|50|NT|Philippians||phil,php,pp
+COL|51|NT|Colossians||col
+1TH|52|NT|1 Thessalonians||1thess,1thes,1th
+2TH|53|NT|2 Thessalonians||2thess,2thes,2th
+1TI|54|NT|1 Timothy||1tim,1ti
+2TI|55|NT|2 Timothy||2tim,2ti
+TIT|56|NT|Titus||tit,ti
+PHM|57|NT|Philemon||philem,phlm,phm
+HEB|58|NT|Hebrews||heb
+JAS|59|NT|James||jas,jm
+1PE|60|NT|1 Peter||1pet,1pe,1pt
+2PE|61|NT|2 Peter||2pet,2pe,2pt
+1JN|62|NT|1 John||1jn,1jo,1joh
+2JN|63|NT|2 John||2jn,2jo,2joh
+3JN|64|NT|3 John||3jn,3jo,3joh
+JUD|65|NT|Jude||jude,jde
+REV|66|NT|Revelation||rev,re,rv,revelations

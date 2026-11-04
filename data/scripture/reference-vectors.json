@@ -1,0 +1,293 @@
+{
+  "description": "Shared reference-parsing vectors. Consumed by BOTH the Rust parser (src-tauri/src/scripture/mod.rs) and the TypeScript parser (src/lib/scripture/reference.test.ts) so the native app and the browser demo cannot drift apart. range = [startChapter, startVerse, endChapter, endVerse]. Expectations were written by hand from the packaged chapter and verse structure.",
+  "cases": [
+    {
+      "input": "Genesis 1:1",
+      "ok": true,
+      "canonical": "Genesis 1:1",
+      "bookId": "GEN",
+      "range": [1, 1, 1, 1]
+    },
+    {
+      "input": "John 3:16",
+      "ok": true,
+      "canonical": "John 3:16",
+      "bookId": "JHN",
+      "range": [3, 16, 3, 16]
+    },
+    {
+      "input": "Psalm 23",
+      "ok": true,
+      "canonical": "Psalm 23",
+      "bookId": "PSA",
+      "range": [23, 1, 23, 6]
+    },
+    {
+      "input": "Revelation 13:16-18",
+      "ok": true,
+      "canonical": "Revelation 13:16-18",
+      "bookId": "REV",
+      "range": [13, 16, 13, 18]
+    },
+    {
+      "input": "Rev 13:18",
+      "ok": true,
+      "canonical": "Revelation 13:18",
+      "bookId": "REV",
+      "range": [13, 18, 13, 18]
+    },
+    {
+      "input": "1 John 4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "3 John 1:2",
+      "ok": true,
+      "canonical": "3 John 1:2",
+      "bookId": "3JN",
+      "range": [1, 2, 1, 2]
+    },
+    {
+      "input": "3 John 2",
+      "ok": true,
+      "canonical": "3 John 1:2",
+      "bookId": "3JN",
+      "range": [1, 2, 1, 2]
+    },
+    {
+      "input": "1john 4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "I John 4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "First John 4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "1st John 4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "1Jn4:1",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "  1 JOHN   4 : 1  ",
+      "ok": true,
+      "canonical": "1 John 4:1",
+      "bookId": "1JN",
+      "range": [4, 1, 4, 1]
+    },
+    {
+      "input": "II Kings 2:11",
+      "ok": true,
+      "canonical": "2 Kings 2:11",
+      "bookId": "2KI",
+      "range": [2, 11, 2, 11]
+    },
+    {
+      "input": "Second Samuel 7:12",
+      "ok": true,
+      "canonical": "2 Samuel 7:12",
+      "bookId": "2SA",
+      "range": [7, 12, 7, 12]
+    },
+    {
+      "input": "Rev. 13:18",
+      "ok": true,
+      "canonical": "Revelation 13:18",
+      "bookId": "REV",
+      "range": [13, 18, 13, 18]
+    },
+    {
+      "input": "REVELATION 22:21",
+      "ok": true,
+      "canonical": "Revelation 22:21",
+      "bookId": "REV",
+      "range": [22, 21, 22, 21]
+    },
+    {
+      "input": "Song of Songs 2:1",
+      "ok": true,
+      "canonical": "Song of Solomon 2:1",
+      "bookId": "SNG",
+      "range": [2, 1, 2, 1]
+    },
+    {
+      "input": "Ps 23:1",
+      "ok": true,
+      "canonical": "Psalm 23:1",
+      "bookId": "PSA",
+      "range": [23, 1, 23, 1]
+    },
+    {
+      "input": "Psalms 23",
+      "ok": true,
+      "canonical": "Psalm 23",
+      "bookId": "PSA",
+      "range": [23, 1, 23, 6]
+    },
+    {
+      "input": "genesis1:1",
+      "ok": true,
+      "canonical": "Genesis 1:1",
+      "bookId": "GEN",
+      "range": [1, 1, 1, 1]
+    },
+    { "input": "Rev 13:16–​18", "ok": false, "code": "malformed" },
+    {
+      "input": "Rev 13:16–18",
+      "ok": true,
+      "canonical": "Revelation 13:16-18",
+      "bookId": "REV",
+      "range": [13, 16, 13, 18]
+    },
+    {
+      "input": "Rev 13:16—18",
+      "ok": true,
+      "canonical": "Revelation 13:16-18",
+      "bookId": "REV",
+      "range": [13, 16, 13, 18]
+    },
+    {
+      "input": "John\t3:16",
+      "ok": true,
+      "canonical": "John 3:16",
+      "bookId": "JHN",
+      "range": [3, 16, 3, 16]
+    },
+    {
+      "input": "John 3:16\n",
+      "ok": true,
+      "canonical": "John 3:16",
+      "bookId": "JHN",
+      "range": [3, 16, 3, 16]
+    },
+    {
+      "input": "Genesis 1:31-2:3",
+      "ok": true,
+      "canonical": "Genesis 1:31-2:3",
+      "bookId": "GEN",
+      "range": [1, 31, 2, 3]
+    },
+    {
+      "input": "Genesis 1-3",
+      "ok": true,
+      "canonical": "Genesis 1-3",
+      "bookId": "GEN",
+      "range": [1, 1, 3, 24]
+    },
+    {
+      "input": "Genesis 1:1-31",
+      "ok": true,
+      "canonical": "Genesis 1",
+      "bookId": "GEN",
+      "range": [1, 1, 1, 31]
+    },
+    {
+      "input": "Genesis",
+      "ok": true,
+      "canonical": "Genesis 1",
+      "bookId": "GEN",
+      "range": [1, 1, 1, 31]
+    },
+    {
+      "input": "Revelation 13",
+      "ok": true,
+      "canonical": "Revelation 13",
+      "bookId": "REV",
+      "range": [13, 1, 13, 18]
+    },
+    {
+      "input": "Jude 3",
+      "ok": true,
+      "canonical": "Jude 1:3",
+      "bookId": "JUD",
+      "range": [1, 3, 1, 3]
+    },
+    {
+      "input": "Jude 1:3",
+      "ok": true,
+      "canonical": "Jude 1:3",
+      "bookId": "JUD",
+      "range": [1, 3, 1, 3]
+    },
+    {
+      "input": "Jude 3-5",
+      "ok": true,
+      "canonical": "Jude 1:3-5",
+      "bookId": "JUD",
+      "range": [1, 3, 1, 5]
+    },
+    {
+      "input": "Jude",
+      "ok": true,
+      "canonical": "Jude 1:1-25",
+      "bookId": "JUD",
+      "range": [1, 1, 1, 25]
+    },
+    {
+      "input": "Obadiah 1:21",
+      "ok": true,
+      "canonical": "Obadiah 1:21",
+      "bookId": "OBA",
+      "range": [1, 21, 1, 21]
+    },
+    { "input": "", "ok": false, "code": "empty" },
+    { "input": "   ", "ok": false, "code": "empty" },
+    {
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "ok": false,
+      "code": "too_long"
+    },
+    { "input": "Hezekiah 1:1", "ok": false, "code": "unknown_book" },
+    { "input": "Hezekiah", "ok": false, "code": "unknown_book" },
+    { "input": "John 3:16 NIV", "ok": false, "code": "unknown_book" },
+    { "input": "3:16", "ok": false, "code": "malformed" },
+    { "input": "- 3", "ok": false, "code": "malformed" },
+    { "input": "John 3:", "ok": false, "code": "malformed" },
+    { "input": "John 3:16-", "ok": false, "code": "malformed" },
+    { "input": "John :16", "ok": false, "code": "malformed" },
+    { "input": "John 3:16:1", "ok": false, "code": "malformed" },
+    { "input": "John 3 16", "ok": false, "code": "malformed" },
+    { "input": "John 99999", "ok": false, "code": "malformed" },
+    { "input": "John 3,16", "ok": false, "code": "malformed" },
+    { "input": "Génesis 1:1", "ok": false, "code": "malformed" },
+    { "input": "x'; DROP TABLE notes;--", "ok": false, "code": "malformed" },
+    { "input": "<script>alert(1)</script>", "ok": false, "code": "malformed" },
+    { "input": "John\u0000 3:16", "ok": false, "code": "malformed" },
+    { "input": "Revelation 23", "ok": false, "code": "out_of_range" },
+    { "input": "Revelation 0", "ok": false, "code": "out_of_range" },
+    { "input": "Revelation 13:19", "ok": false, "code": "out_of_range" },
+    { "input": "Revelation 13:0", "ok": false, "code": "out_of_range" },
+    { "input": "Psalm 151", "ok": false, "code": "out_of_range" },
+    { "input": "Philemon 1:26", "ok": false, "code": "out_of_range" },
+    { "input": "Jude 26", "ok": false, "code": "out_of_range" },
+    { "input": "Jude 2:1", "ok": false, "code": "out_of_range" },
+    { "input": "John 3:18-16", "ok": false, "code": "invalid_range" },
+    { "input": "John 3-2", "ok": false, "code": "invalid_range" },
+    { "input": "Genesis 2:1-1:5", "ok": false, "code": "invalid_range" },
+    { "input": "Genesis 1-50", "ok": false, "code": "range_too_large" }
+  ]
+}

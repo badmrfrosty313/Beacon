@@ -9,3 +9,4 @@ src-tauri/migrations
 *.rs
 *.toml
 *.md
+data/scripture/source

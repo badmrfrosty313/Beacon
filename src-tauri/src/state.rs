@@ -10,6 +10,7 @@ use serde::Serialize;
 use crate::db::{self, migrations};
 use crate::documents;
 use crate::error::{AppError, Result};
+use crate::scripture;
 
 /// Temporary files younger than this may belong to a write still in progress.
 const STALE_TEMP_FILE_AGE: Duration = Duration::from_secs(300);
@@ -19,6 +20,9 @@ pub struct AppState {
     /// `Err` holds the (user-content-free) reason initialization failed. The app still starts
     /// so the UI can explain the problem; a GUI process has no visible stderr on Windows.
     db: std::result::Result<Mutex<Connection>, String>,
+    /// The verified Scripture index, or why Scripture is unavailable. A Scripture failure never
+    /// takes notes and documents down with it.
+    scripture: std::result::Result<scripture::Index, String>,
 }
 
 /// Facts about the running app, shown on the Settings screen.
@@ -38,19 +42,33 @@ impl AppState {
         let opened = std::fs::create_dir_all(&data_dir)
             .map_err(AppError::from)
             .and_then(|()| db::open_and_migrate(&data_dir.join(db::DB_FILE_NAME)));
-        let db = match opened {
-            Ok(conn) => {
+        let (db, scripture) = match opened {
+            Ok(mut conn) => {
                 // Remove half-written files from an interrupted import (best effort).
                 documents::sweep_stale_temp_files(&data_dir, STALE_TEMP_FILE_AGE);
-                Ok(Mutex::new(conn))
+                // Install (first run) or verify the packaged, read-only Scripture text.
+                let scripture = scripture::install(&mut conn)
+                    .and_then(|()| scripture::Index::load(&conn))
+                    .map_err(|error| {
+                        eprintln!("BEACON: Scripture data unavailable: {error}");
+                        match error {
+                            AppError::ScriptureUnavailable(detail) => detail,
+                            other => other.to_string(),
+                        }
+                    });
+                (Ok(Mutex::new(conn)), scripture)
             }
             Err(error) => {
                 // Initialization errors mention files and SQL, never note content.
                 eprintln!("BEACON: database initialization failed: {error}");
-                Err(error.to_string())
+                (Err(error.to_string()), Err(error.to_string()))
             }
         };
-        Self { data_dir, db }
+        Self {
+            data_dir,
+            db,
+            scripture,
+        }
     }
 
     pub fn data_dir(&self) -> &Path {
@@ -66,6 +84,17 @@ impl AppState {
             }
             Err(reason) => Err(AppError::Unavailable(reason.clone())),
         }
+    }
+
+    /// Run `operation` against the database and the verified Scripture index.
+    pub fn with_scripture<T>(
+        &self,
+        operation: impl FnOnce(&Connection, &scripture::Index) -> Result<T>,
+    ) -> Result<T> {
+        self.with_db(|conn| match &self.scripture {
+            Ok(index) => operation(conn, index),
+            Err(reason) => Err(AppError::ScriptureUnavailable(reason.clone())),
+        })
     }
 
     pub fn info(&self) -> AppInfo {
