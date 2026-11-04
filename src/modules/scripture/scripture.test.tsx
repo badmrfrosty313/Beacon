@@ -240,6 +240,60 @@ describe('Revelation 13:18 workflow (definition of done)', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Psalm 23' })).toBeVisible();
   });
 
+  it('also resumes at the reader position after opening the unsaved draft', async () => {
+    const user = userEvent.setup();
+    renderApp(
+      createFakeApi([
+        {
+          id: 1,
+          title: 'Linked',
+          body: 'Scripture reference: Genesis 1:1 (WEB)\n\nMy notes:\n',
+          createdAt: '2026-11-04T12:00:00Z',
+        },
+      ]),
+    );
+    await user.click(screen.getByRole('button', { name: 'Notes' }));
+    await user.click(await screen.findByRole('button', { name: /Linked/ }));
+    await user.click(await screen.findByRole('button', { name: 'Open Genesis 1:1 in Scripture' }));
+    await screen.findByRole('heading', { level: 2, name: 'Genesis 1:1' });
+    await goTo(user, 'Psalm 23');
+    await screen.findByRole('heading', { level: 2, name: 'Psalm 23' });
+    await user.click(screen.getByRole('button', { name: 'Create note from reference' }));
+    await screen.findByLabelText('Title');
+    // Leave the new draft empty-ish, go back to Scripture via the sidebar, then use the
+    // "unsaved note" shortcut and return again.
+    await user.type(screen.getByLabelText('Title'), 'draft');
+    await user.click(screen.getByRole('button', { name: /^Scripture/ }));
+    await screen.findByRole('heading', { level: 2, name: 'Psalm 23' });
+    await user.click(screen.getByRole('button', { name: 'Open the unsaved note' }));
+    await screen.findByLabelText('Title');
+    await user.click(screen.getByRole('button', { name: /^Scripture/ }));
+    expect(await screen.findByRole('heading', { level: 2, name: 'Psalm 23' })).toBeVisible();
+  });
+
+  it('keeps the error when a note link with an invalid reference opens a fallback chapter', async () => {
+    const user = userEvent.setup();
+    renderApp(
+      createFakeApi([
+        {
+          id: 1,
+          title: 'Bad link',
+          body: 'Scripture reference: John 22 (WEB)\n\nMy notes:\n',
+          createdAt: '2026-11-04T12:00:00Z',
+        },
+      ]),
+    );
+    await user.click(screen.getByRole('button', { name: 'Notes' }));
+    await user.click(await screen.findByRole('button', { name: /Bad link/ }));
+    await user.click(await screen.findByRole('button', { name: 'Open John 22 in Scripture' }));
+
+    // The reader is not left empty: it shows the saved/default chapter ...
+    expect(await screen.findByRole('heading', { level: 2, name: 'Genesis 1' })).toBeVisible();
+    // ... but says plainly that the requested reference was rejected, and keeps the text.
+    expect(await screen.findByRole('alert')).toHaveTextContent('John has 21 chapters.');
+    expect(screen.getByLabelText('Go to reference')).toHaveValue('John 22');
+  });
+
   it('does not overwrite an unsaved note draft', async () => {
     const user = userEvent.setup();
     renderApp();

@@ -76,9 +76,12 @@ export function ScriptureView({
       const id = ++requestId.current;
       try {
         const next = await api.getScriptureChapter(bookId, chapter);
-        if (id === requestId.current) accept(next, focus);
+        if (id !== requestId.current) return false;
+        accept(next, focus);
+        return true;
       } catch (error) {
         if (id === requestId.current) setLoadError(errorMessage(error));
+        return false;
       }
     },
     [api, accept],
@@ -94,11 +97,18 @@ export function ScriptureView({
           accept(result.passage, true);
           return;
         }
-        setProblem(result.problem.message);
-        // Never leave the reader empty because of a bad reference.
+        const message = result.problem.message;
+        setProblem(message);
+        // Never leave the reader empty because of a bad reference. Showing the fallback
+        // chapter must not hide why it is showing, so the error and the text the user
+        // (or the note link) supplied are restored once the fallback has loaded.
         if (currentPassage.current === null) {
           const saved = loadPosition() ?? DEFAULT_POSITION;
-          void loadChapter(saved.bookId, saved.chapter, false);
+          const loaded = await loadChapter(saved.bookId, saved.chapter, false);
+          if (loaded) {
+            setProblem(message);
+            setInput(text);
+          }
         }
       } catch (error) {
         if (id === requestId.current) setLoadError(errorMessage(error));
