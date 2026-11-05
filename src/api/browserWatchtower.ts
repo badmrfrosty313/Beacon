@@ -95,7 +95,7 @@ export function createBrowserWatchtower(
 
   async function exists(tx: IDBTransaction, store: string, id: unknown): Promise<boolean> {
     if (!isId(id)) return false;
-    return (await request(tx.objectStore(store).count(IDBKeyRange.only(id)))) > 0;
+    return (await request(tx.objectStore(store).count(id))) > 0;
   }
 
   async function require_(

@@ -23,7 +23,7 @@ function mount(api: BeaconApi, extra: Parameters<typeof WatchtowerView>[0] = {})
 type User = ReturnType<typeof userEvent.setup>;
 
 async function createEvent(user: User, title: string, date: string) {
-  await user.click(screen.getByRole('button', { name: 'Events' }));
+  await user.click(await screen.findByRole('button', { name: 'Events' }));
   await user.click(screen.getByRole('button', { name: 'New event' }));
   await user.type(screen.getByLabelText('Event title'), title);
   if (date) await user.type(screen.getByLabelText('Event date'), date);
@@ -151,7 +151,7 @@ describe('Watchtower input handling', () => {
     const api = createBrowserDemoApi();
     mount(api);
 
-    await user.click(screen.getByRole('button', { name: 'Events' }));
+    await user.click(await screen.findByRole('button', { name: 'Events' }));
     await user.click(screen.getByRole('button', { name: 'New event' }));
     await user.type(screen.getByLabelText('Event title'), 'Artificial event');
     await user.type(screen.getByLabelText('Event date'), 'next spring');
