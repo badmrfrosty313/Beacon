@@ -231,4 +231,29 @@ describe('Watchtower input handling', () => {
     expect(within(pane).getByText('Preserved copy in your Archive')).toBeInTheDocument();
     expect(within(pane).getByText(doc.title)).toBeInTheDocument();
   });
+
+  it('does not carry an unsaved draft from one event or hypothesis to another', async () => {
+    const user = userEvent.setup();
+    const api = createBrowserDemoApi();
+    const a = await api.createEvent({ title: 'Artificial event A' });
+    await api.createEvent({ title: 'Artificial event B' });
+    await api.createHypothesis({ title: 'Hypothesis A', statement: 'First proposition.' });
+    await api.createHypothesis({ title: 'Hypothesis B', statement: 'Second proposition.' });
+    mount(api);
+
+    await user.click(await screen.findByRole('button', { name: 'Events' }));
+    await user.click(screen.getByRole('button', { name: /Artificial event A/ }));
+    await user.type(await screen.findByLabelText('Statement'), 'Draft meant for A');
+    await user.click(screen.getByRole('button', { name: /Artificial event B/ }));
+    await screen.findByRole('article', { name: 'Event: Artificial event B' });
+    expect(screen.getByLabelText('Statement')).toHaveValue('');
+    expect(a.id).toBe(1);
+
+    await user.click(screen.getByRole('button', { name: 'Hypotheses' }));
+    await user.click(screen.getByRole('button', { name: /Hypothesis A/ }));
+    await user.type(await screen.findByLabelText('Why does it relate this way?'), 'Reason for A');
+    await user.click(screen.getByRole('button', { name: /Hypothesis B/ }));
+    await screen.findByRole('article', { name: 'Hypothesis: Hypothesis B' });
+    expect(screen.getByLabelText('Why does it relate this way?')).toHaveValue('');
+  });
 });

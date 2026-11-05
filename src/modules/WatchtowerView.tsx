@@ -260,6 +260,7 @@ export function WatchtowerView({
       if (pane.editing) {
         return (
           <EventForm
+            key={detail.event.id}
             api={api}
             initial={detail.event}
             onCancel={() => setPane({ kind: 'event', id: pane.id })}
@@ -305,6 +306,7 @@ export function WatchtowerView({
             </ul>
           )}
           <ClaimForm
+            key={event.id}
             api={api}
             eventId={event.id}
             sources={snapshot.sources}
@@ -330,6 +332,7 @@ export function WatchtowerView({
       if (pane.editing) {
         return (
           <SourceForm
+            key={detail.source.id}
             api={api}
             documents={documents}
             initial={detail.source}
@@ -423,6 +426,7 @@ export function WatchtowerView({
       if (pane.editing) {
         return (
           <HypothesisForm
+            key={hypothesis.id}
             api={api}
             initial={hypothesis}
             onCancel={() => setPane({ kind: 'hypothesis', id: pane.id })}
@@ -498,6 +502,7 @@ export function WatchtowerView({
             onOpenSource={(id) => open('source', id)}
           />
           <LinkForm
+            key={hypothesis.id}
             api={api}
             hypothesisId={hypothesis.id}
             snapshot={snapshot}
