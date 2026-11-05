@@ -349,6 +349,7 @@ fn source_and_claim(conn: &Connection, with_source: Option<i64>) -> (i64, i64) {
         conn,
         &SourceInput {
             title: "Synthetic source".into(),
+            author: Some("A. Author".into()),
             ..Default::default()
         },
     )
