@@ -242,8 +242,7 @@ export function createBrowserResearch(
       return run([S.documents, archiveStore], 'readonly', async (tx) => {
         const find = async (store: string) => {
           const row = (await request(tx.objectStore(store).index('sha256').get(sha256))) as
-            | { id: number; title: string }
-            | undefined;
+            { id: number; title: string } | undefined;
           return row ? { id: row.id, title: row.title } : null;
         };
         return { research: await find(S.documents), archive: await find(archiveStore) };
@@ -291,8 +290,7 @@ export function createBrowserResearch(
           );
           const store = tx.objectStore(S.documents);
           const existing = (await request(store.index('sha256').get(sha256))) as
-            | StoredResearch
-            | undefined;
+            StoredResearch | undefined;
           if (existing) {
             // Same bytes already catalogued: restore a lost or damaged original from these
             // hash-verified bytes, and change nothing else.
@@ -485,8 +483,7 @@ export function createBrowserResearch(
             await requireRow(tx, S.documents, documentId, 'That imported document does not exist.');
             const claim = isId(claimId)
               ? ((await request(tx.objectStore(claimsStore).get(claimId))) as
-                  | { sourceId: number | null }
-                  | undefined)
+                  { sourceId: number | null } | undefined)
               : undefined;
             if (!claim) bad('That statement does not exist.');
             const links = await allSourceLinks(tx);
