@@ -350,6 +350,7 @@ describe('research import: recoverable failures (review findings)', () => {
     await stage(user, file('Retry.md', 'A passage to keep.'));
     await user.click(await screen.findByRole('button', { name: /Import selected files \(1\)/ }));
     const reader = await screen.findByRole('article', { name: 'Retry' });
+    await screen.findByText('Map into Watchtower');
     await user.click(
       within(reader).getByRole('button', { name: 'Create a Watchtower source from this document' }),
     );
