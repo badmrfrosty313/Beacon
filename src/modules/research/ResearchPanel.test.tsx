@@ -300,3 +300,99 @@ describe('research import: deliberate Watchtower mapping', () => {
     expect([links.sourceLinks.length, links.excerpts.length]).toEqual([1, 1]);
   });
 });
+
+describe('research import: recoverable failures (review findings)', () => {
+  it('lets a duplicate file repair a damaged preserved original without creating a record', async () => {
+    const user = userEvent.setup();
+    const api = createBrowserDemoApi();
+    const first = mount(api);
+    await makeCollection(user);
+    await stage(user, file('Repairable.md', 'precious original'));
+    await user.click(await screen.findByRole('button', { name: /Import selected files \(1\)/ }));
+    await screen.findByRole('article', { name: 'Repairable' });
+    const [doc] = await api.listResearch();
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open('beacon-browser-demo-v1');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const tx = open.result.transaction('rs_documents', 'readwrite');
+        const store = tx.objectStore('rs_documents');
+        const get = store.get(doc?.id ?? 0);
+        get.onsuccess = () =>
+          store.put({ ...get.result, original: new TextEncoder().encode('tampered').buffer });
+        tx.oncomplete = () => {
+          open.result.close();
+          resolve();
+        };
+      };
+    });
+    await expect(api.getResearch(doc?.id ?? 0)).rejects.toMatchObject({ code: 'integrity' });
+    first.unmount();
+
+    mount(api);
+    await stage(user, file('Repairable.md', 'precious original'));
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Re-check the preserved original against this file',
+      }),
+    );
+    expect(await screen.findByText(/has been restored from this file/)).toBeInTheDocument();
+    expect(await api.listResearch()).toHaveLength(1);
+    expect((await api.getResearch(doc?.id ?? 0)).body).toBe('precious original');
+  });
+
+  it('does not create duplicate records when an excerpt save is corrected and retried', async () => {
+    const user = userEvent.setup();
+    const api = createBrowserDemoApi();
+    await api.createHypothesis({ title: 'Synthetic hypothesis', statement: 'Invented.' });
+    mount(api);
+    await makeCollection(user);
+    await stage(user, file('Retry.md', 'A passage to keep.'));
+    await user.click(await screen.findByRole('button', { name: /Import selected files \(1\)/ }));
+    const reader = await screen.findByRole('article', { name: 'Retry' });
+    await user.click(
+      within(reader).getByRole('button', { name: 'Create a Watchtower source from this document' }),
+    );
+    const sourceForm = await screen.findByRole('form', { name: 'Create source from document' });
+    await user.type(within(sourceForm).getByLabelText('Author'), 'A. Author');
+    await user.click(
+      within(sourceForm).getByLabelText('I confirm creating this source in Watchtower'),
+    );
+    await user.click(within(sourceForm).getByRole('button', { name: 'Create source and link it' }));
+
+    const form = await screen.findByRole('form', { name: 'Record excerpt' });
+    const source = within(form).getByLabelText('Source');
+    await user.selectOptions(source, within(source).getByRole('option', { name: 'Retry' }));
+    await user.selectOptions(within(form).getByLabelText('Event'), 'Create a new event…');
+    await user.type(within(form).getByLabelText('New event title'), 'Synthetic event');
+    await user.selectOptions(
+      within(form).getByLabelText('How do you classify this excerpt?'),
+      'Interpretation',
+    );
+    await user.type(within(form).getByLabelText('Excerpt text'), 'A passage to keep.');
+    await user.selectOptions(
+      within(form).getByLabelText('Attach to a hypothesis (optional)'),
+      'Synthetic hypothesis',
+    );
+    await user.click(within(form).getByLabelText('I confirm this classification'));
+
+    // The explanation is missing: refused BEFORE anything is created.
+    await user.click(within(form).getByRole('button', { name: 'Save excerpt' }));
+    expect(await within(form).findByRole('alert')).toHaveTextContent(/Say why/);
+    let snapshot = await api.getWatchtower();
+    expect([snapshot.events.length, snapshot.claims.length]).toEqual([0, 0]);
+
+    // Correct it and save: exactly one event, one statement, one excerpt, one evidence link.
+    await user.type(
+      within(form).getByLabelText('Why does it relate this way?'),
+      'Invented reasoning.',
+    );
+    await user.click(within(form).getByRole('button', { name: 'Save excerpt' }));
+    await screen.findByRole('list', { name: 'Recorded excerpts' });
+    snapshot = await api.getWatchtower();
+    expect([snapshot.events.length, snapshot.claims.length, snapshot.links.length]).toEqual([
+      1, 1, 1,
+    ]);
+    expect((await api.getResearchLinks()).excerpts).toHaveLength(1);
+  });
+});

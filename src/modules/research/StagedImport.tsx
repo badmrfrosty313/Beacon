@@ -18,6 +18,7 @@ export interface Staged {
   attributionNote: string;
   rightsNote: string;
   outcome?: string;
+  repairNote?: string;
 }
 
 const PREVIEW_CHARS = 20_000;
@@ -30,9 +31,11 @@ const PREVIEW_CHARS = 20_000;
 export function StagedPreview({
   item,
   onChange,
+  onRepair,
 }: {
   item: Staged;
   onChange: (patch: Partial<Staged>) => void;
+  onRepair: () => void;
 }) {
   const prepared = item.prepared;
   if (item.status === 'reading') {
@@ -93,6 +96,18 @@ export function StagedPreview({
             Already in your private library as “{item.duplicate.research.title}”. This file will be
             skipped and nothing will be duplicated.
           </p>
+        ) : null}
+        {item.duplicate?.research ? (
+          <div>
+            <button type="button" className="button" onClick={onRepair}>
+              Re-check the preserved original against this file
+            </button>
+            <p className="muted doc-hint">
+              If the stored original was lost or damaged, this restores it from this file. Nothing
+              else changes.
+            </p>
+            {item.repairNote ? <p role="status">{item.repairNote}</p> : null}
+          </div>
         ) : null}
         {item.duplicate?.archive && !item.duplicate.research ? (
           <p className="banner" role="status">

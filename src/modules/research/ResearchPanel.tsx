@@ -151,6 +151,54 @@ export function ResearchPanel({ extractPdf = extractPdfText }: { extractPdf?: Pd
     (item) => item.status === 'ready' && item.include && item.duplicate?.research == null,
   );
 
+  function buildInput(item: Staged, targetCollection: number) {
+    const prepared = item.prepared as NonNullable<Staged['prepared']>;
+    return {
+      name: prepared.name,
+      bytes: prepared.bytes,
+      collectionId: targetCollection,
+      title: item.title,
+      author: blankToNull(item.author),
+      publisher: blankToNull(item.publisher),
+      publishedDate: blankToNull(item.publishedDate),
+      attributionNote: blankToNull(item.attributionNote),
+      rightsNote: blankToNull(item.rightsNote),
+      ...(prepared.format === 'pdf'
+        ? {
+            extractedText: prepared.text,
+            extractionMethod: prepared.method,
+            pageCount: prepared.pageCount ?? 1,
+            textTruncated: prepared.truncated,
+          }
+        : {}),
+    };
+  }
+
+  /**
+   * A file whose bytes are already in the library can never create a second record, but
+   * choosing it again lets BEACON re-check the preserved original against these exact bytes and
+   * restore it if it was lost or damaged. Nothing else changes.
+   */
+  async function repairOriginal(item: Staged) {
+    const target = collectionId !== '' ? Number(collectionId) : collections?.[0]?.id;
+    if (!item.prepared || target === undefined) return;
+    try {
+      await api.importResearch(buildInput(item, target));
+      patchStaged(item.key, { repairNote: 'The preserved original was checked.' });
+    } catch (error) {
+      const apiError = toApiError(error);
+      patchStaged(item.key, {
+        repairNote:
+          apiError.code === 'duplicate'
+            ? apiError.message.includes('restored')
+              ? 'The preserved original was missing or damaged and has been restored from this file.'
+              : 'The preserved original matches this file and is intact.'
+            : apiError.message,
+      });
+    }
+    refresh();
+  }
+
   async function importSelected() {
     if (collectionId === '') {
       setBatchError(
@@ -165,25 +213,7 @@ export function ResearchPanel({ extractPdf = extractPdfText }: { extractPdf?: Pd
       const prepared = item.prepared;
       if (!prepared) continue;
       try {
-        const doc = await api.importResearch({
-          name: prepared.name,
-          bytes: prepared.bytes,
-          collectionId: Number(collectionId),
-          title: item.title,
-          author: blankToNull(item.author),
-          publisher: blankToNull(item.publisher),
-          publishedDate: blankToNull(item.publishedDate),
-          attributionNote: blankToNull(item.attributionNote),
-          rightsNote: blankToNull(item.rightsNote),
-          ...(prepared.format === 'pdf'
-            ? {
-                extractedText: prepared.text,
-                extractionMethod: prepared.method,
-                pageCount: prepared.pageCount ?? 1,
-                textTruncated: prepared.truncated,
-              }
-            : {}),
-        });
+        const doc = await api.importResearch(buildInput(item, Number(collectionId)));
         lastId = doc.id;
         patchStaged(item.key, {
           status: 'imported',
@@ -534,6 +564,7 @@ export function ResearchPanel({ extractPdf = extractPdfText }: { extractPdf?: Pd
             key={activeItem.key}
             item={activeItem}
             onChange={(patch) => patchStaged(activeItem.key, patch)}
+            onRepair={() => void repairOriginal(activeItem)}
           />
         ) : selectedId !== null ? (
           <ResearchReader

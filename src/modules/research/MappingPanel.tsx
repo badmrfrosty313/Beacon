@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 
 import { useApi } from '../../api/ApiContext';
 import { errorMessage } from '../../api/errors';
@@ -243,108 +243,147 @@ function ExcerptForm({
   const [confirmed, setConfirmed] = useState(false);
   const [done, setDone] = useState<string | null>(null);
 
+  // Steps already committed. A later failure keeps them, so correcting the form and retrying
+  // finishes the remaining steps instead of creating duplicates (nothing here can be deleted).
+  const created = useRef<{ eventId?: number; claimId?: number; excerptLinked?: boolean }>({});
+  const [locked, setLocked] = useState(false);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setDone(null);
     const ok = await run(async () => {
-      if (sourceId === '' || eventId === '' || kind === '') {
-        throw new Error('Choose a source, an event and a classification before saving.');
+      const steps = created.current;
+      if (steps.claimId === undefined) {
+        // Check everything that can be checked BEFORE anything is created.
+        if (sourceId === '' || eventId === '' || kind === '') {
+          throw new Error('Choose a source, an event and a classification before saving.');
+        }
+        if (eventId === NEW_EVENT && steps.eventId === undefined && newEventTitle.trim() === '') {
+          throw new Error('Give the new event a title.');
+        }
+        if (text.trim() === '') throw new Error('Enter the excerpt text.');
+        if (kind === 'attributed_claim' && attribution.trim() === '') {
+          throw new Error('An attributed claim must say who made the claim.');
+        }
       }
-      let resolvedEvent = Number(eventId);
-      if (eventId === NEW_EVENT) {
-        resolvedEvent = (await api.createEvent({ title: newEventTitle })).id;
+      if (hypothesisId !== '' && explanation.trim() === '') {
+        throw new Error('Say why this relates to the hypothesis, or choose not to attach it.');
       }
-      const claim = await api.createClaim({
-        eventId: resolvedEvent,
-        sourceId: Number(sourceId),
-        kind: kind as ClaimKind,
-        text,
-        attribution: blankToNull(attribution),
-      });
-      await api.linkResearchExcerpt(doc.id, claim.id, location);
+      if (steps.claimId === undefined) {
+        let resolvedEvent = Number(eventId);
+        if (eventId === NEW_EVENT) {
+          steps.eventId ??= (await api.createEvent({ title: newEventTitle })).id;
+          resolvedEvent = steps.eventId;
+        }
+        steps.claimId = (
+          await api.createClaim({
+            eventId: resolvedEvent,
+            sourceId: Number(sourceId),
+            kind: kind as ClaimKind,
+            text,
+            attribution: blankToNull(attribution),
+          })
+        ).id;
+        setLocked(true);
+      }
+      if (!steps.excerptLinked) {
+        await api.linkResearchExcerpt(doc.id, steps.claimId, location);
+        steps.excerptLinked = true;
+      }
       if (hypothesisId !== '') {
         await api.createEvidenceLink({
           hypothesisId: Number(hypothesisId),
           relation,
-          claimId: claim.id,
+          claimId: steps.claimId,
           explanation,
         });
       }
     });
     if (ok) {
+      created.current = {};
+      setLocked(false);
       setDone('Excerpt recorded as you classified it.');
       setText('');
       setAttribution('');
       setLocation('');
       setExplanation('');
       setConfirmed(false);
-      await onDone();
     }
+    // Show whatever was committed, even after a failure part-way through.
+    await onDone();
   }
 
   return (
     <form className="form-section" onSubmit={submit} aria-label="Record excerpt">
       <h4>Record a selected excerpt</h4>
-      <SelectField
-        label="Source"
-        value={sourceId}
-        onChange={setSourceId}
-        options={[
-          { value: '', label: 'Choose a source…' },
-          ...linkedSources.map((s) => ({ value: String(s.id), label: s.title })),
-        ]}
-      />
-      <SelectField
-        label="Event"
-        value={eventId}
-        onChange={setEventId}
-        options={[
-          { value: '', label: 'Choose an event…' },
-          ...snapshot.events.map((e) => ({ value: String(e.id), label: e.title })),
-          { value: NEW_EVENT, label: 'Create a new event…' },
-        ]}
-      />
-      {eventId === NEW_EVENT ? (
-        <TextField
-          label="New event title"
-          value={newEventTitle}
-          maxLength={200}
-          onChange={setNewEventTitle}
-        />
+      {locked ? (
+        <p role="status">
+          The statement is already saved in Watchtower. Fix the remaining details below and save
+          again to finish; the statement will not be created twice.
+        </p>
       ) : null}
-      <SelectField
-        label="How do you classify this excerpt?"
-        value={kind}
-        onChange={setKind}
-        options={[
-          { value: '', label: 'Choose a classification…' },
-          ...CLAIM_KINDS.map((k) => ({ value: k, label: CLAIM_KIND_LABEL[k] })),
-        ]}
-        hint={
-          kind === ''
-            ? 'There is no default. A quote you pasted is not a verified observation unless you classify it as one.'
-            : CLAIM_KIND_HINT[kind as ClaimKind]
-        }
-      />
-      <TextAreaField
-        label="Excerpt text"
-        value={text}
-        rows={4}
-        hint="Copy the passage you want to keep. It is stored as your own record, separate from the document."
-        onChange={setText}
-      />
-      <TextField
-        label={kind === 'attributed_claim' ? 'Who made this claim (required)' : 'Attribution'}
-        value={attribution}
-        onChange={setAttribution}
-      />
-      <TextField
-        label="Location in the document (optional)"
-        value={location}
-        hint="For example: page 3, or section 2. Not checked against the document."
-        maxLength={100}
-        onChange={setLocation}
-      />
+      <fieldset className="form-section" disabled={locked}>
+        <SelectField
+          label="Source"
+          value={sourceId}
+          onChange={setSourceId}
+          options={[
+            { value: '', label: 'Choose a source…' },
+            ...linkedSources.map((s) => ({ value: String(s.id), label: s.title })),
+          ]}
+        />
+        <SelectField
+          label="Event"
+          value={eventId}
+          onChange={setEventId}
+          options={[
+            { value: '', label: 'Choose an event…' },
+            ...snapshot.events.map((e) => ({ value: String(e.id), label: e.title })),
+            { value: NEW_EVENT, label: 'Create a new event…' },
+          ]}
+        />
+        {eventId === NEW_EVENT ? (
+          <TextField
+            label="New event title"
+            value={newEventTitle}
+            maxLength={200}
+            onChange={setNewEventTitle}
+          />
+        ) : null}
+        <SelectField
+          label="How do you classify this excerpt?"
+          value={kind}
+          onChange={setKind}
+          options={[
+            { value: '', label: 'Choose a classification…' },
+            ...CLAIM_KINDS.map((k) => ({ value: k, label: CLAIM_KIND_LABEL[k] })),
+          ]}
+          hint={
+            kind === ''
+              ? 'There is no default. A quote you pasted is not a verified observation unless you classify it as one.'
+              : CLAIM_KIND_HINT[kind as ClaimKind]
+          }
+        />
+        <TextAreaField
+          label="Excerpt text"
+          value={text}
+          rows={4}
+          hint="Copy the passage you want to keep. It is stored as your own record, separate from the document."
+          onChange={setText}
+        />
+        <TextField
+          label={kind === 'attributed_claim' ? 'Who made this claim (required)' : 'Attribution'}
+          value={attribution}
+          onChange={setAttribution}
+        />
+        <TextField
+          label="Location in the document (optional)"
+          value={location}
+          hint="For example: page 3, or section 2. Not checked against the document."
+          maxLength={100}
+          onChange={setLocation}
+        />
+      </fieldset>
       <SelectField
         label="Attach to a hypothesis (optional)"
         value={hypothesisId}

@@ -157,8 +157,9 @@ function summarize(doc: StoredResearch): ImportedSummary {
   };
 }
 
-function duplicateError(title: string): ApiError {
-  return new ApiError('duplicate', `This file is already in your library as “${title}”.`);
+function duplicateError(title: string, restored: boolean): ApiError {
+  const note = restored ? ' Its archived copy was missing or damaged and has been restored.' : '';
+  return new ApiError('duplicate', `This file is already in your library as “${title}”.${note}`);
 }
 
 const integrityError = () =>
@@ -294,13 +295,11 @@ export function createBrowserResearch(
           if (existing) {
             // Same bytes already catalogued: restore a lost or damaged original from these
             // hash-verified bytes, and change nothing else.
-            if (
+            const damaged =
               !isArrayBuffer(existing.original) ||
-              sha256Hex(new Uint8Array(existing.original)) !== sha256
-            ) {
-              await request(store.put({ ...existing, original }));
-            }
-            return { kind: 'duplicate' as const, title: existing.title };
+              sha256Hex(new Uint8Array(existing.original)) !== sha256;
+            if (damaged) await request(store.put({ ...existing, original }));
+            return { kind: 'duplicate' as const, title: existing.title, restored: damaged };
           }
           if ((await request(store.count())) >= MAX_DOCUMENTS) {
             bad(`You already have the maximum of ${MAX_DOCUMENTS} imported documents.`);
@@ -328,7 +327,7 @@ export function createBrowserResearch(
           const id = Number(await request(store.add(record)));
           return { kind: 'created' as const, doc: { id, ...record } };
         });
-        if (outcome.kind === 'duplicate') throw duplicateError(outcome.title);
+        if (outcome.kind === 'duplicate') throw duplicateError(outcome.title, outcome.restored);
         const doc = outcome.doc;
         return {
           ...summarize(doc),
