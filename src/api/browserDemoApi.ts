@@ -136,7 +136,8 @@ const runTransaction: RunTransaction = async <T>(
       finish(() => reject(unavailable()));
       return;
     }
-    tx.oncomplete = () => finish(() => (failure === undefined ? resolve(result as T) : reject(failure)));
+    tx.oncomplete = () =>
+      finish(() => (failure === undefined ? resolve(result as T) : reject(failure)));
     tx.onerror = () => finish(() => reject(failure ?? unavailable()));
     tx.onabort = () => finish(() => reject(failure ?? unavailable()));
     work(tx).then(
