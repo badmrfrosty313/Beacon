@@ -12,20 +12,16 @@ import {
   type SearchHit,
 } from './types';
 import { validateDocument, validateContent } from '../lib/documentValidation';
-import {
-  MATCH_END,
-  MATCH_START,
-  MAX_SEARCH_RESULTS,
-  QueryRejection,
-  parseSearchQuery,
-} from '../lib/searchQuery';
+import { MAX_SEARCH_RESULTS, QueryRejection, parseSearchQuery } from '../lib/searchQuery';
 import { loadScriptureEngine } from '../lib/scripture/packaged';
 import {
   WATCHTOWER_STORES,
   createBrowserWatchtower,
   type RunTransaction,
 } from './browserWatchtower';
+import { RESEARCH_STORES, createBrowserResearch } from './browserResearch';
 import { sha256Hex } from '../lib/sha256';
+import { matchDocument, tokenize } from '../lib/wordSearch';
 import { validateNote } from '../lib/validation';
 
 // Strictly for the explicit Vite browser-demo mode. Native builds use createTauriApi
@@ -37,8 +33,11 @@ import { validateNote } from '../lib/validation';
 //      Upgrading keeps every existing note untouched.
 //   3: adds the five Watchtower stores (`wt_events`, `wt_sources`, `wt_claims`,
 //      `wt_hypotheses`, `wt_links`). Upgrading keeps every note and document untouched.
+//   4: adds the research-import stores (`rs_collections`, `rs_documents` with unique `sha256`,
+//      `rs_source_links`, `rs_excerpts`). Upgrading keeps every note, document and Watchtower
+//      record untouched.
 const DATABASE = 'beacon-browser-demo-v1';
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 const NOTES = 'notes';
 const DOCUMENTS = 'documents';
 /** Demo-only cap: the browser has no FTS index, so search scans every stored document. */
@@ -90,6 +89,22 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(DOCUMENTS)) {
         const documents = db.createObjectStore(DOCUMENTS, { keyPath: 'id', autoIncrement: true });
         documents.createIndex('sha256', 'sha256', { unique: true });
+      }
+      if (!db.objectStoreNames.contains(RESEARCH_STORES.collections)) {
+        db.createObjectStore(RESEARCH_STORES.collections, { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains(RESEARCH_STORES.documents)) {
+        const research = db.createObjectStore(RESEARCH_STORES.documents, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+        research.createIndex('sha256', 'sha256', { unique: true });
+        research.createIndex('collectionId', 'collectionId');
+      }
+      for (const name of [RESEARCH_STORES.sourceLinks, RESEARCH_STORES.excerpts]) {
+        if (!db.objectStoreNames.contains(name)) {
+          db.createObjectStore(name, { keyPath: 'id', autoIncrement: true });
+        }
       }
       for (const name of Object.values(WATCHTOWER_STORES)) {
         if (!db.objectStoreNames.contains(name)) {
@@ -237,94 +252,6 @@ function summarize(doc: StoredDocument): DocumentSummary {
     byteLength: doc.byteLength,
     importedAt: doc.importedAt,
   };
-}
-
-// ---- Demo-only word search --------------------------------------------------------------
-// A deliberately simple approximation of what the native FTS5 index does: lower-cased,
-// accent-folded word tokens; every query unit must appear; a quoted phrase must appear as
-// consecutive words. It is NOT SQLite FTS5 (no stemming, ranking model or index), and the UI
-// says so. Native search never falls back to this code.
-
-interface Token {
-  text: string;
-  start: number;
-  end: number;
-}
-
-function tokenize(text: string): Token[] {
-  const tokens: Token[] = [];
-  for (const match of text.matchAll(/[\p{L}\p{N}\p{M}]+/gu)) {
-    const start = match.index ?? 0;
-    tokens.push({
-      text: match[0].normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(),
-      start,
-      end: start + match[0].length,
-    });
-  }
-  return tokens;
-}
-
-function findUnit(tokens: Token[], unit: string[]): number[] {
-  if (unit.length === 0) return [];
-  const starts: number[] = [];
-  for (let i = 0; i + unit.length <= tokens.length; i += 1) {
-    if (unit.every((word, offset) => tokens[i + offset]?.text === word)) starts.push(i);
-  }
-  return starts;
-}
-
-const SNIPPET_BEFORE = 60;
-const SNIPPET_AFTER = 100;
-
-function buildSnippet(content: string, ranges: Array<[number, number]>): string {
-  const first = ranges[0];
-  if (first === undefined) return content.slice(0, SNIPPET_BEFORE + SNIPPET_AFTER);
-  const from = Math.max(0, first[0] - SNIPPET_BEFORE);
-  const to = Math.min(content.length, first[1] + SNIPPET_AFTER);
-  let out = from > 0 ? '…' : '';
-  let cursor = from;
-  for (const [start, end] of ranges) {
-    if (end <= from || start >= to) continue;
-    const s = Math.max(start, from);
-    const e = Math.min(end, to);
-    out += content.slice(cursor, s) + MATCH_START + content.slice(s, e) + MATCH_END;
-    cursor = e;
-  }
-  out += content.slice(cursor, to);
-  return to < content.length ? `${out}…` : out;
-}
-
-function mergeRanges(ranges: Array<[number, number]>): Array<[number, number]> {
-  const sorted = [...ranges].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const merged: Array<[number, number]> = [];
-  for (const range of sorted) {
-    const last = merged[merged.length - 1];
-    if (last !== undefined && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
-    else merged.push([range[0], range[1]]);
-  }
-  return merged;
-}
-
-function matchDocument(
-  doc: StoredDocument,
-  units: string[][],
-): { score: number; snippet: string } | null {
-  const contentTokens = tokenize(doc.content);
-  const titleTokens = tokenize(doc.title);
-  const ranges: Array<[number, number]> = [];
-  let score = 0;
-  for (const unit of units) {
-    const inContent = findUnit(contentTokens, unit);
-    const inTitle = findUnit(titleTokens, unit);
-    if (inContent.length === 0 && inTitle.length === 0) return null;
-    score += inContent.length + inTitle.length * 3;
-    for (const index of inContent.slice(0, 50)) {
-      const startToken = contentTokens[index];
-      const endToken = contentTokens[index + unit.length - 1];
-      if (startToken && endToken) ranges.push([startToken.start, endToken.end]);
-    }
-  }
-  return { score, snippet: buildSnippet(doc.content, mergeRanges(ranges)) };
 }
 
 /** `instanceof` fails across realms (iframes, test sandboxes), so check the tag instead. */
@@ -486,6 +413,12 @@ export function createBrowserDemoApi(): BeaconApi {
     },
     // Watchtower: private research records, in IndexedDB like notes and documents.
     ...createBrowserWatchtower(runTransaction, DOCUMENTS),
+    ...createBrowserResearch(
+      runTransaction,
+      DOCUMENTS,
+      WATCHTOWER_STORES.sources,
+      WATCHTOWER_STORES.claims,
+    ),
     // Scripture is read-only reference data bundled with the demo, not stored in IndexedDB, so
     // none of it can touch (or be lost with) the user's notes and documents.
     async getScriptureOverview(): Promise<ScriptureOverview> {

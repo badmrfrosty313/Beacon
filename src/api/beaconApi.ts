@@ -11,6 +11,17 @@ import type {
   ResearchSource,
   SourceInput,
   WatchtowerSnapshot,
+  CollectionInput,
+  DuplicateCheck,
+  ImportedDocument,
+  ImportedExcerpt,
+  ImportedHit,
+  ImportedLinks,
+  ImportedSourceLink,
+  ImportedSummary,
+  ResearchCollection,
+  ResearchImportInput,
+  ResearchMetadataUpdate,
   Document,
   DocumentSummary,
   ImportDocument,
@@ -55,4 +66,24 @@ export interface BeaconApi {
   createHypothesis(input: HypothesisInput): Promise<ResearchHypothesis>;
   updateHypothesis(id: number, input: HypothesisInput): Promise<ResearchHypothesis>;
   createEvidenceLink(input: LinkInput): Promise<EvidenceLink>;
+
+  // Private research import. Originals are preserved byte for byte; extracted text is derivative.
+  // Nothing here publishes, syncs or uploads. Importing the same bytes twice rejects with
+  // `duplicate` and changes nothing.
+  listResearchCollections(): Promise<ResearchCollection[]>;
+  createResearchCollection(input: CollectionInput): Promise<ResearchCollection>;
+  checkResearchDuplicate(sha256: string): Promise<DuplicateCheck>;
+  importResearch(input: ResearchImportInput): Promise<ImportedDocument>;
+  listResearch(collectionId?: number): Promise<ImportedSummary[]>;
+  /** Re-verifies the preserved original; rejects with `integrity` if it changed or vanished. */
+  getResearch(id: number): Promise<ImportedDocument>;
+  searchResearch(query: string, collectionId?: number): Promise<ImportedHit[]>;
+  updateResearchMetadata(id: number, input: ResearchMetadataUpdate): Promise<ImportedSummary>;
+  getResearchLinks(): Promise<ImportedLinks>;
+  linkResearchSource(documentId: number, sourceId: number): Promise<ImportedSourceLink>;
+  linkResearchExcerpt(
+    documentId: number,
+    claimId: number,
+    location?: string,
+  ): Promise<ImportedExcerpt>;
 }

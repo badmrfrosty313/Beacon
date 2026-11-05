@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { BeaconApi } from './beaconApi';
 import { toApiError } from './errors';
+import { bytesToBase64 } from '../lib/base64';
 import {
   ApiError,
   type AppInfo,
@@ -16,6 +17,14 @@ import {
   type ResearchSource,
   type SourceInput,
   type WatchtowerSnapshot,
+  type DuplicateCheck,
+  type ImportedDocument,
+  type ImportedExcerpt,
+  type ImportedHit,
+  type ImportedLinks,
+  type ImportedSourceLink,
+  type ImportedSummary,
+  type ResearchCollection,
   type Document,
   type DocumentSummary,
   type LookupResult,
@@ -72,6 +81,31 @@ export function createTauriApi(invokeFn: InvokeFn = guardedInvoke): BeaconApi {
     lookupScripture: (input) => call<LookupResult>('scripture_lookup', { input }),
     getScriptureChapter: (bookId, chapter) =>
       call<ScripturePassage>('scripture_chapter', { bookId, chapter }),
+    listResearchCollections: () => call<ResearchCollection[]>('research_list_collections'),
+    createResearchCollection: (input) =>
+      call<ResearchCollection>('research_create_collection', { input }),
+    checkResearchDuplicate: (sha256) =>
+      call<DuplicateCheck>('research_check_duplicate', { sha256 }),
+    importResearch: ({ bytes, ...rest }) =>
+      call<ImportedDocument>('research_import', {
+        input: { ...rest, data: bytesToBase64(bytes) },
+      }),
+    listResearch: (collectionId) =>
+      call<ImportedSummary[]>('research_list', { collectionId: collectionId ?? null }),
+    getResearch: (id) => call<ImportedDocument>('research_get', { id }),
+    searchResearch: (query, collectionId) =>
+      call<ImportedHit[]>('research_search', { query, collectionId: collectionId ?? null }),
+    updateResearchMetadata: (id, input) =>
+      call<ImportedSummary>('research_update_metadata', { id, input }),
+    getResearchLinks: () => call<ImportedLinks>('research_links'),
+    linkResearchSource: (documentId, sourceId) =>
+      call<ImportedSourceLink>('research_link_source', { documentId, sourceId }),
+    linkResearchExcerpt: (documentId, claimId, location) =>
+      call<ImportedExcerpt>('research_link_excerpt', {
+        documentId,
+        claimId,
+        location: location ?? null,
+      }),
     getWatchtower: () => call<WatchtowerSnapshot>('watchtower_snapshot'),
     createEvent: (input: EventInput) => call<ResearchEvent>('watchtower_create_event', { input }),
     updateEvent: (id, input) => call<ResearchEvent>('watchtower_update_event', { id, input }),

@@ -173,7 +173,7 @@ describe('browser-demo documents (IndexedDB)', () => {
     const api = createBrowserDemoApi();
     expect((await api.listNotes()).map((note) => note.title)).toEqual(['Written by the old demo']);
     expect(await api.listDocuments()).toEqual([]);
-    expect((await api.getAppInfo()).schemaVersion).toBe(3);
+    expect((await api.getAppInfo()).schemaVersion).toBe(4);
     const doc = await api.importDocument({ name: 'new.txt', bytes: bytesOf('after upgrade') });
     expect(doc.id).toBe(1);
     expect(await api.listNotes()).toHaveLength(1);

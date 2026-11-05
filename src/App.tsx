@@ -4,6 +4,7 @@ import { useApi } from './api/ApiContext';
 import { errorMessage } from './api/errors';
 import type { Note } from './api/types';
 import { Sidebar } from './components/Sidebar';
+import type { PdfExtractor } from './lib/research/pdfText';
 import { ArchiveView, type ArchivePane, type ArchiveSection } from './modules/archive/ArchiveView';
 import type { NoteDraft } from './modules/archive/NoteForm';
 import { LifelineView } from './modules/LifelineView';
@@ -95,8 +96,11 @@ function archiveReducer(state: ArchiveState, action: ArchiveAction): ArchiveStat
 
 export default function App({
   initialArchiveSection = 'documents',
+  extractPdf,
 }: {
   initialArchiveSection?: ArchiveSection;
+  /** Test seam: replaces the real PDF text extractor. */
+  extractPdf?: PdfExtractor;
 }) {
   const api = useApi();
   const [archiveSection, setArchiveSection] = useState<ArchiveSection>(initialArchiveSection);
@@ -183,6 +187,7 @@ export default function App({
             saveError={archive.saveError}
             refreshRevision={archive.refreshRevision}
             onOpenScripture={openScripture}
+            extractPdf={extractPdf}
           />
         ) : null}
         {active === 'scripture' ? (

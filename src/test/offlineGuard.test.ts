@@ -142,7 +142,12 @@ describe('dependency allowlists', () => {
 
   it('JavaScript runtime dependencies are limited to the reviewed set', () => {
     const pkg = JSON.parse(read('package.json')) as { dependencies: Record<string, string> };
-    expect(Object.keys(pkg.dependencies).sort()).toEqual(['@tauri-apps/api', 'react', 'react-dom']);
+    expect(Object.keys(pkg.dependencies).sort()).toEqual([
+      '@tauri-apps/api',
+      'pdfjs-dist',
+      'react',
+      'react-dom',
+    ]);
   });
 
   it('Rust sources register no Tauri plugins and use no sockets', () => {
