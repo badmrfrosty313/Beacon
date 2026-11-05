@@ -5,6 +5,7 @@
 //! * `notes`: Sprint 001 demo record (validation + SQL).
 //! * `documents`: imported text originals, FTS5 search.
 //! * `scripture`: read-only packaged Scripture reference data and reference lookup.
+//! * `watchtower`: events, sources, claims, hypotheses and evidence links (private research).
 //! * `db`: connection setup and versioned migrations.
 //! * `state`: data directory + connection lifecycle.
 //!
@@ -17,6 +18,7 @@ pub mod error;
 pub mod notes;
 pub mod scripture;
 pub mod state;
+pub mod watchtower;
 
 use tauri::Manager;
 
@@ -42,6 +44,15 @@ pub fn run() {
             commands::scripture_overview,
             commands::scripture_lookup,
             commands::scripture_chapter,
+            commands::watchtower_snapshot,
+            commands::watchtower_create_event,
+            commands::watchtower_update_event,
+            commands::watchtower_create_source,
+            commands::watchtower_update_source,
+            commands::watchtower_create_claim,
+            commands::watchtower_create_hypothesis,
+            commands::watchtower_update_hypothesis,
+            commands::watchtower_create_link,
         ])
         .run(tauri::generate_context!())
         .expect("error while running PROJECT BEACON");

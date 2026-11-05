@@ -88,3 +88,22 @@ untouched (no IndexedDB schema change). Without a service worker, a cold start w
 still needs the page itself to have been loaded before.
 
 Record these checks as browser-only, not native verification.
+
+### Watchtower in the browser demo (Sprint 004)
+
+Use only invented test data; the demo is not for real research. Check these on the hosted page after merge:
+
+15. Open **Watchtower → Events → New event**: title `Test bridge closure`, date `2026-03-10`. Create a second
+    event dated `2025-12`. In **Timeline**, the 2025-12 event is listed first even though it was created last.
+16. **Sources → New source**: title `Test County bulletin`, publisher `Test County`, an address, a published
+    and a retrieved date. The source says **Metadata only, no offline copy** and the address is plain text,
+    not a link. Import a `.txt` in the Archive, edit the source to link it, and expect **Preserved copy in your Archive**.
+17. On the event, add one statement of each kind. An *attributed claim* without an attribution is refused. Each
+    kind shows its own badge.
+18. **Hypotheses → New hypothesis**, then link one statement as **Supports** and another as **Contradicts**, each
+    with a reason. Both appear in separate groups. Use **Set aside** and **Reopen**; the status changes only when you do it.
+19. Try the date `next spring` (refused) and an event with no date (listed under **Undated events**).
+20. Reload, then switch the network off: all records are still there and nothing was fetched.
+
+The demo stores everything in IndexedDB (database version 3; notes and documents are untouched by the upgrade).
+Record these checks as browser-only, not native verification.

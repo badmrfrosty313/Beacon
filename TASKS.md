@@ -46,9 +46,20 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
   - Open: native Windows acceptance (Revelation 13:18 workflow, close/reopen, airplane mode), hosted-demo acceptance, Android real-device check (Sprint 007).
 
 ## Sprint 004: Watchtower
+> **Sprint 004 status: implemented on `feature/sprint-004-watchtower` (draft PR); CI results and the manual checks below are recorded only after they have actually run.** Nothing here has been launched or tried by a person. Verification is labelled below as **CI-verified** (a named GitHub Actions run), **locally verified** (run in the author's sandbox, which has no Rust crates or npm packages and so could not build the app or run Vitest) or **manually verified** (a person did it). At the time of writing the author had locally run only the pure TypeScript logic (date parsing against the shared vectors, validation, derived views) and the Rust date/validation logic compiled in isolation; the full Rust crate and every React/IndexedDB test await CI.
+
 - [ ] **B-011:** Create event/source/hypothesis records with explicit provenance fields.
+  - Implemented: migration 0004 (five tables, CHECK/FK/unique constraints, restricted deletes), typed Rust create/update with transactions and validation, nine IPC commands, browser IndexedDB equivalents, create/edit forms. Four distinct times are never synthesised; a URL-only source is labelled metadata-only; an Archive document link is the only "preserved copy". See ADR-015.
 - [ ] **B-012:** Create supports/contradicts/context evidence links and a simple timeline.
+  - Implemented: links tie a hypothesis to a claim or a source (optional event) with a required explanation; no orphans; hypothesis, event and source detail panes with navigation between them; timeline ordered by event date with undated events listed separately; filters by statement class and hypothesis status; Scripture and Archive navigation.
 - [ ] **B-013:** Explicitly label observation, attributed claim, interpretation and forecast.
+  - Implemented: mandatory class per statement, attribution required for attributed claims, distinct badges (label + glyph + border), hypotheses kept as a separate proposition type, no confidence or probability field, conflicting sources kept side by side.
+- [ ] **Browser demo (IndexedDB) parity:** database version 3 adds `wt_*` stores; upgrade from version 2 keeps notes and documents.
+  - Open (CI): Rust unit and integration tests (including the version-3 to 4 upgrade and restart), Vitest suites (`dates`, `validation`, `model`, `browserWatchtower`, `WatchtowerView`, `App`), Windows release build.
+  - Open (manual): native Windows acceptance and browser-demo acceptance (procedures in this file and docs/BROWSER-DEMO.md). Browser parity can only be checked on GitHub Pages after merge.
+  - Known limitations: no delete, no revision history, claims and links are append-only, no source licence/permission field, no export, no Android validation (Sprint 007), snapshot capped at 5,000 records per table.
+
+**Manual native acceptance (Windows, not yet done by anyone):** launch the EXE with the network off; create `Test bridge closure` dated `2026-03-10` and `Test earlier event` dated `2025-12`; create a source with a publisher, address and dates; add an observation, an attributed claim (with attribution), an interpretation and a forecast; create a hypothesis; link one statement as Supports and another as Contradicts with reasons; check the Timeline lists the 2025-12 event first and each statement kind has its own badge; Set aside then Reopen the hypothesis; close and reopen the app and confirm everything is still there. Use invented data only.
 
 ## Sprint 005: Research Import
 - [ ] **B-014:** Define owner-approved import mapping from Project E; do not automatically publish private or copyrighted materials.

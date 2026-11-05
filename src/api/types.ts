@@ -135,6 +135,134 @@ export interface ReferenceProblem {
 export type LookupResult =
   { ok: true; passage: ScripturePassage } | { ok: false; problem: ReferenceProblem };
 
+/** Watchtower: private, local research records. Mirrors src-tauri/src/watchtower/mod.rs. */
+
+export type DatePrecision = 'year' | 'month' | 'day' | 'minute';
+export const CLAIM_KINDS = [
+  'observation',
+  'attributed_claim',
+  'interpretation',
+  'forecast',
+] as const;
+export type ClaimKind = (typeof CLAIM_KINDS)[number];
+export const HYPOTHESIS_STATUSES = ['open', 'under_review', 'set_aside'] as const;
+export type HypothesisStatus = (typeof HYPOTHESIS_STATUSES)[number];
+export const LINK_RELATIONS = ['supports', 'contradicts', 'context'] as const;
+export type LinkRelation = (typeof LINK_RELATIONS)[number];
+
+export interface ResearchEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  /** When the event happened, as the user stated it. `null` means undated; never defaulted. */
+  eventDate: string | null;
+  datePrecision: DatePrecision | null;
+  /** Ordering key only: minutes since 1970-01-01T00:00Z at the start of the stated period. */
+  eventSort: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchSource {
+  id: number;
+  title: string;
+  author: string | null;
+  publisher: string | null;
+  /** Stored as data only; never fetched. A URL alone is not an offline copy. */
+  url: string | null;
+  publishedDate: string | null;
+  retrievedDate: string | null;
+  /** An Archive document the user preserved locally (distinct from the URL). */
+  documentId: number | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchClaim {
+  id: number;
+  eventId: number;
+  sourceId: number | null;
+  kind: ClaimKind;
+  text: string;
+  attribution: string | null;
+  scriptureReference: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchHypothesis {
+  id: number;
+  title: string;
+  statement: string;
+  status: HypothesisStatus;
+  scriptureReference: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EvidenceLink {
+  id: number;
+  hypothesisId: number;
+  relation: LinkRelation;
+  claimId: number | null;
+  sourceId: number | null;
+  /** Only for source-only evidence; a claim already belongs to one event. */
+  eventId: number | null;
+  explanation: string;
+  createdAt: string;
+}
+
+export interface WatchtowerSnapshot {
+  events: ResearchEvent[];
+  sources: ResearchSource[];
+  claims: ResearchClaim[];
+  hypotheses: ResearchHypothesis[];
+  links: EvidenceLink[];
+}
+
+export interface EventInput {
+  title: string;
+  description?: string | null;
+  eventDate?: string | null;
+}
+
+export interface SourceInput {
+  title: string;
+  author?: string | null;
+  publisher?: string | null;
+  url?: string | null;
+  publishedDate?: string | null;
+  retrievedDate?: string | null;
+  documentId?: number | null;
+  note?: string | null;
+}
+
+export interface ClaimInput {
+  eventId: number;
+  sourceId?: number | null;
+  kind: ClaimKind;
+  text: string;
+  attribution?: string | null;
+  scriptureReference?: string | null;
+}
+
+export interface HypothesisInput {
+  title: string;
+  statement: string;
+  status?: HypothesisStatus;
+  scriptureReference?: string | null;
+}
+
+export interface LinkInput {
+  hypothesisId: number;
+  relation: LinkRelation;
+  claimId?: number | null;
+  sourceId?: number | null;
+  eventId?: number | null;
+  explanation: string;
+}
+
 export type ApiErrorCode =
   | 'validation'
   | 'not_found'

@@ -1,5 +1,16 @@
 import type {
   AppInfo,
+  ClaimInput,
+  EventInput,
+  EvidenceLink,
+  HypothesisInput,
+  LinkInput,
+  ResearchClaim,
+  ResearchEvent,
+  ResearchHypothesis,
+  ResearchSource,
+  SourceInput,
+  WatchtowerSnapshot,
   Document,
   DocumentSummary,
   ImportDocument,
@@ -31,4 +42,17 @@ export interface BeaconApi {
   lookupScripture(input: string): Promise<LookupResult>;
   /** A whole chapter by book id ("REV") and chapter number. Rejects with `not_found` if absent. */
   getScriptureChapter(bookId: string, chapter: number): Promise<ScripturePassage>;
+
+  // Watchtower: private local research records. Reads return everything in one consistent
+  // snapshot; the UI derives the timeline and detail views from it. There is no delete in
+  // v0.1, and claims and evidence links are append-only.
+  getWatchtower(): Promise<WatchtowerSnapshot>;
+  createEvent(input: EventInput): Promise<ResearchEvent>;
+  updateEvent(id: number, input: EventInput): Promise<ResearchEvent>;
+  createSource(input: SourceInput): Promise<ResearchSource>;
+  updateSource(id: number, input: SourceInput): Promise<ResearchSource>;
+  createClaim(input: ClaimInput): Promise<ResearchClaim>;
+  createHypothesis(input: HypothesisInput): Promise<ResearchHypothesis>;
+  updateHypothesis(id: number, input: HypothesisInput): Promise<ResearchHypothesis>;
+  createEvidenceLink(input: LinkInput): Promise<EvidenceLink>;
 }

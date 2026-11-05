@@ -10,6 +10,10 @@ use crate::error::Result;
 use crate::notes::{self, Note, NoteSummary};
 use crate::scripture::{self, LookupResult, ScriptureOverview, ScripturePassage};
 use crate::state::{AppInfo, AppState};
+use crate::watchtower::{
+    self, ClaimInput, ClaimRecord, EventInput, EventRecord, HypothesisInput, HypothesisRecord,
+    LinkInput, LinkRecord, Snapshot, SourceInput, SourceRecord,
+};
 
 #[tauri::command]
 pub fn app_info(state: State<'_, AppState>) -> AppInfo {
@@ -72,4 +76,73 @@ pub fn scripture_chapter(
     chapter: u32,
 ) -> Result<ScripturePassage> {
     state.with_scripture(|conn, index| scripture::chapter(conn, index, &book_id, chapter))
+}
+
+#[tauri::command]
+pub fn watchtower_snapshot(state: State<'_, AppState>) -> Result<Snapshot> {
+    state.with_db(watchtower::snapshot)
+}
+
+#[tauri::command]
+pub fn watchtower_create_event(
+    state: State<'_, AppState>,
+    input: EventInput,
+) -> Result<EventRecord> {
+    state.with_db(|conn| watchtower::create_event(conn, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_update_event(
+    state: State<'_, AppState>,
+    id: i64,
+    input: EventInput,
+) -> Result<EventRecord> {
+    state.with_db(|conn| watchtower::update_event(conn, id, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_create_source(
+    state: State<'_, AppState>,
+    input: SourceInput,
+) -> Result<SourceRecord> {
+    state.with_db(|conn| watchtower::create_source(conn, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_update_source(
+    state: State<'_, AppState>,
+    id: i64,
+    input: SourceInput,
+) -> Result<SourceRecord> {
+    state.with_db(|conn| watchtower::update_source(conn, id, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_create_claim(
+    state: State<'_, AppState>,
+    input: ClaimInput,
+) -> Result<ClaimRecord> {
+    state.with_db(|conn| watchtower::create_claim(conn, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_create_hypothesis(
+    state: State<'_, AppState>,
+    input: HypothesisInput,
+) -> Result<HypothesisRecord> {
+    state.with_db(|conn| watchtower::create_hypothesis(conn, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_update_hypothesis(
+    state: State<'_, AppState>,
+    id: i64,
+    input: HypothesisInput,
+) -> Result<HypothesisRecord> {
+    state.with_db(|conn| watchtower::update_hypothesis(conn, id, &input))
+}
+
+#[tauri::command]
+pub fn watchtower_create_link(state: State<'_, AppState>, input: LinkInput) -> Result<LinkRecord> {
+    state.with_db(|conn| watchtower::create_link(conn, &input))
 }

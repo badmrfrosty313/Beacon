@@ -20,6 +20,11 @@ import {
   parseSearchQuery,
 } from '../lib/searchQuery';
 import { loadScriptureEngine } from '../lib/scripture/packaged';
+import {
+  WATCHTOWER_STORES,
+  createBrowserWatchtower,
+  type RunTransaction,
+} from './browserWatchtower';
 import { sha256Hex } from '../lib/sha256';
 import { validateNote } from '../lib/validation';
 
@@ -30,8 +35,10 @@ import { validateNote } from '../lib/validation';
 //   1: `notes`
 //   2: adds `documents` (original bytes + decoded text + SHA-256, unique on sha256).
 //      Upgrading keeps every existing note untouched.
+//   3: adds the five Watchtower stores (`wt_events`, `wt_sources`, `wt_claims`,
+//      `wt_hypotheses`, `wt_links`). Upgrading keeps every note and document untouched.
 const DATABASE = 'beacon-browser-demo-v1';
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 const NOTES = 'notes';
 const DOCUMENTS = 'documents';
 /** Demo-only cap: the browser has no FTS index, so search scans every stored document. */
@@ -84,6 +91,11 @@ function openDatabase(): Promise<IDBDatabase> {
         const documents = db.createObjectStore(DOCUMENTS, { keyPath: 'id', autoIncrement: true });
         documents.createIndex('sha256', 'sha256', { unique: true });
       }
+      for (const name of Object.values(WATCHTOWER_STORES)) {
+        if (!db.objectStoreNames.contains(name)) {
+          db.createObjectStore(name, { keyPath: 'id', autoIncrement: true });
+        }
+      }
     };
     request.onerror = () => reject(unavailable());
     request.onblocked = () =>
@@ -96,6 +108,53 @@ function openDatabase(): Promise<IDBDatabase> {
     };
   });
 }
+
+/**
+ * Run `work` inside ONE transaction spanning several stores. A thrown error aborts the whole
+ * transaction (nothing is written) and is re-thrown to the caller unchanged.
+ */
+const runTransaction: RunTransaction = async <T>(
+  stores: string[],
+  mode: IDBTransactionMode,
+  work: (tx: IDBTransaction) => Promise<T>,
+): Promise<T> => {
+  const db = await openDatabase();
+  return new Promise<T>((resolve, reject) => {
+    let result: T | undefined;
+    let failure: unknown;
+    let settled = false;
+    const finish = (action: () => void) => {
+      if (settled) return;
+      settled = true;
+      db.close();
+      action();
+    };
+    let tx: IDBTransaction;
+    try {
+      tx = db.transaction(stores, mode);
+    } catch {
+      finish(() => reject(unavailable()));
+      return;
+    }
+    tx.oncomplete = () =>
+      finish(() => (failure === undefined ? resolve(result as T) : reject(failure)));
+    tx.onerror = () => finish(() => reject(failure ?? unavailable()));
+    tx.onabort = () => finish(() => reject(failure ?? unavailable()));
+    work(tx).then(
+      (value) => {
+        result = value;
+      },
+      (error: unknown) => {
+        failure = error;
+        try {
+          tx.abort();
+        } catch {
+          // Already finished; the handlers above settle the promise.
+        }
+      },
+    );
+  });
+};
 
 async function transaction<T>(
   storeName: string,
@@ -425,6 +484,8 @@ export function createBrowserDemoApi(): BeaconApi {
           importedAt: doc.importedAt,
         }));
     },
+    // Watchtower: private research records, in IndexedDB like notes and documents.
+    ...createBrowserWatchtower(runTransaction, DOCUMENTS),
     // Scripture is read-only reference data bundled with the demo, not stored in IndexedDB, so
     // none of it can touch (or be lost with) the user's notes and documents.
     async getScriptureOverview(): Promise<ScriptureOverview> {

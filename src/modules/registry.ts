@@ -11,7 +11,7 @@ export interface ModuleDefinition {
 export const MODULES: readonly ModuleDefinition[] = [
   { id: 'archive', label: 'Archive', status: 'available', tagline: 'Documents & notes' },
   { id: 'scripture', label: 'Scripture', status: 'available', tagline: 'Read & reference' },
-  { id: 'watchtower', label: 'Watchtower', status: 'planned', tagline: 'Events & evidence' },
+  { id: 'watchtower', label: 'Watchtower', status: 'available', tagline: 'Events & evidence' },
   { id: 'lifeline', label: 'Lifeline', status: 'planned', tagline: 'Preparedness references' },
   { id: 'settings', label: 'Settings', status: 'available', tagline: 'About & data' },
 ];
