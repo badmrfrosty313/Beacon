@@ -362,7 +362,7 @@ describe('browser Watchtower: ordering, persistence, upgrade', () => {
     expect((await api.getWatchtower()).events).toEqual([]);
     const event = await api.createEvent({ title: 'After upgrade' });
     expect(event.id).toBe(1);
-    expect((await api.getAppInfo()).schemaVersion).toBe(3);
+    expect((await api.getAppInfo()).schemaVersion).toBe(4);
   });
 
   it('makes no network requests', async () => {

@@ -182,7 +182,12 @@ function SourceForm({ doc, onDone }: { doc: ImportedDocument; onDone: () => Prom
   return (
     <form onSubmit={submit} aria-label="Create source from document">
       <TextField label="Source title" value={title} maxLength={200} onChange={setTitle} />
-      <TextField label="Author" value={author} onChange={setAuthor} />
+      <TextField
+        label="Author"
+        value={author}
+        hint="Watchtower needs at least an author or a publisher to identify a source."
+        onChange={setAuthor}
+      />
       <TextField label="Publisher or source" value={publisher} onChange={setPublisher} />
       <TextField
         label="Date written or published"

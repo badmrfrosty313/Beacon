@@ -133,7 +133,7 @@ describe('browser-demo documents (IndexedDB)', () => {
     const api = createBrowserDemoApi();
     const doc = await api.importDocument({ name: 'proof.txt', bytes: bytesOf('original') });
     await new Promise<void>((resolve, reject) => {
-      const open = indexedDB.open('beacon-browser-demo-v1', 3);
+      const open = indexedDB.open('beacon-browser-demo-v1', 4);
       open.onerror = () => reject(open.error);
       open.onsuccess = () => {
         const tx = open.result.transaction('documents', 'readwrite');

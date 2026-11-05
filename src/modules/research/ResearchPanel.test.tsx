@@ -243,6 +243,7 @@ describe('research import: deliberate Watchtower mapping', () => {
     expect(
       within(sourceForm).getByRole('button', { name: 'Create source and link it' }),
     ).toBeDisabled();
+    await user.type(within(sourceForm).getByLabelText('Author'), 'A. Author');
     await user.click(
       within(sourceForm).getByLabelText('I confirm creating this source in Watchtower'),
     );

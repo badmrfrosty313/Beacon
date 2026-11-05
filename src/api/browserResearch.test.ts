@@ -220,7 +220,7 @@ async function seedMapping() {
     collectionId: collection.id,
   });
   const event = await api.createEvent({ title: 'Synthetic event' });
-  const source = await api.createSource({ title: 'Synthetic source' });
+  const source = await api.createSource({ title: 'Synthetic source', author: 'A. Author' });
   const claim = await api.createClaim({
     eventId: event.id,
     sourceId: source.id,
