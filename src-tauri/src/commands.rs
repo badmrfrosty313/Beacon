@@ -8,6 +8,10 @@ use tauri::State;
 use crate::documents::{self, Document, DocumentSummary, SearchHit};
 use crate::error::Result;
 use crate::notes::{self, Note, NoteSummary};
+use crate::research::{
+    self, CollectionInput, CollectionRecord, DuplicateCheck, Excerpt, ImportInput, Links,
+    MetadataInput, ResearchDocument, ResearchSummary, SourceLink,
+};
 use crate::scripture::{self, LookupResult, ScriptureOverview, ScripturePassage};
 use crate::state::{AppInfo, AppState};
 use crate::watchtower::{
@@ -145,4 +149,85 @@ pub fn watchtower_update_hypothesis(
 #[tauri::command]
 pub fn watchtower_create_link(state: State<'_, AppState>, input: LinkInput) -> Result<LinkRecord> {
     state.with_db(|conn| watchtower::create_link(conn, &input))
+}
+
+#[tauri::command]
+pub fn research_create_collection(
+    state: State<'_, AppState>,
+    input: CollectionInput,
+) -> Result<CollectionRecord> {
+    state.with_db(|conn| research::create_collection(conn, &input))
+}
+
+#[tauri::command]
+pub fn research_list_collections(state: State<'_, AppState>) -> Result<Vec<CollectionRecord>> {
+    state.with_db(research::list_collections)
+}
+
+#[tauri::command]
+pub fn research_check_duplicate(
+    state: State<'_, AppState>,
+    sha256: String,
+) -> Result<DuplicateCheck> {
+    state.with_db(|conn| research::check_duplicate(conn, &sha256))
+}
+
+#[tauri::command]
+pub fn research_import(state: State<'_, AppState>, input: ImportInput) -> Result<ResearchDocument> {
+    state.with_db(|conn| research::import(conn, state.data_dir(), &input))
+}
+
+#[tauri::command]
+pub fn research_list(
+    state: State<'_, AppState>,
+    collection_id: Option<i64>,
+) -> Result<Vec<ResearchSummary>> {
+    state.with_db(|conn| research::list(conn, collection_id))
+}
+
+#[tauri::command]
+pub fn research_get(state: State<'_, AppState>, id: i64) -> Result<ResearchDocument> {
+    state.with_db(|conn| research::get(conn, state.data_dir(), id))
+}
+
+#[tauri::command]
+pub fn research_search(
+    state: State<'_, AppState>,
+    query: String,
+    collection_id: Option<i64>,
+) -> Result<Vec<research::SearchHit>> {
+    state.with_db(|conn| research::search(conn, &query, collection_id))
+}
+
+#[tauri::command]
+pub fn research_update_metadata(
+    state: State<'_, AppState>,
+    id: i64,
+    input: MetadataInput,
+) -> Result<ResearchSummary> {
+    state.with_db(|conn| research::update_metadata(conn, id, &input))
+}
+
+#[tauri::command]
+pub fn research_link_source(
+    state: State<'_, AppState>,
+    document_id: i64,
+    source_id: i64,
+) -> Result<SourceLink> {
+    state.with_db(|conn| research::link_source(conn, document_id, source_id))
+}
+
+#[tauri::command]
+pub fn research_link_excerpt(
+    state: State<'_, AppState>,
+    document_id: i64,
+    claim_id: i64,
+    location: Option<String>,
+) -> Result<Excerpt> {
+    state.with_db(|conn| research::link_excerpt(conn, document_id, claim_id, location.as_deref()))
+}
+
+#[tauri::command]
+pub fn research_links(state: State<'_, AppState>) -> Result<Links> {
+    state.with_db(research::links)
 }

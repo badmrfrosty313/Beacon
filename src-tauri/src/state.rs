@@ -46,6 +46,7 @@ impl AppState {
             Ok(mut conn) => {
                 // Remove half-written files from an interrupted import (best effort).
                 documents::sweep_stale_temp_files(&data_dir, STALE_TEMP_FILE_AGE);
+                crate::research::sweep_stale_temp_files(&data_dir, STALE_TEMP_FILE_AGE);
                 // Install (first run) or verify the packaged, read-only Scripture text.
                 let scripture = scripture::install(&mut conn)
                     .and_then(|()| scripture::Index::load(&conn))

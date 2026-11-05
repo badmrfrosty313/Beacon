@@ -41,6 +41,11 @@ pub const MIGRATIONS: &[Migration] = &[
         name: "create_watchtower",
         sql: include_str!("../../migrations/0004_create_watchtower.sql"),
     },
+    Migration {
+        version: 5,
+        name: "create_research_import",
+        sql: include_str!("../../migrations/0005_create_research_import.sql"),
+    },
 ];
 
 /// The schema version this build of BEACON expects.
