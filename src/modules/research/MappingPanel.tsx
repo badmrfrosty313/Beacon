@@ -11,6 +11,7 @@ import {
   type LinkRelation,
   type WatchtowerSnapshot,
 } from '../../api/types';
+import { validateLocation } from '../../lib/research/validation';
 import { CLAIM_KIND_HINT, CLAIM_KIND_LABEL, RELATION_LABEL } from '../../lib/watchtower/model';
 import {
   ClaimKindBadge,
@@ -253,6 +254,9 @@ function ExcerptForm({
     setDone(null);
     const ok = await run(async () => {
       const steps = created.current;
+      // The location is checked before anything is created and stays editable until the
+      // excerpt link is saved, so a bad value can never strand a saved statement.
+      validateLocation(location);
       if (steps.claimId === undefined) {
         // Check everything that can be checked BEFORE anything is created.
         if (sourceId === '' || eventId === '' || kind === '') {
@@ -376,14 +380,14 @@ function ExcerptForm({
           value={attribution}
           onChange={setAttribution}
         />
-        <TextField
-          label="Location in the document (optional)"
-          value={location}
-          hint="For example: page 3, or section 2. Not checked against the document."
-          maxLength={100}
-          onChange={setLocation}
-        />
       </fieldset>
+      <TextField
+        label="Location in the document (optional)"
+        value={location}
+        hint="For example: page 3, or section 2. Not checked against the document."
+        maxLength={100}
+        onChange={setLocation}
+      />
       <SelectField
         label="Attach to a hypothesis (optional)"
         value={hypothesisId}

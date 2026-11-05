@@ -1,4 +1,4 @@
-import { configure, render, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -395,5 +395,56 @@ describe('research import: recoverable failures (review findings)', () => {
       1, 1, 1,
     ]);
     expect((await api.getResearchLinks()).excerpts).toHaveLength(1);
+  });
+
+  it('refuses a control character in the location before saving anything, then completes once', async () => {
+    const user = userEvent.setup();
+    const api = createBrowserDemoApi();
+    mount(api);
+    await makeCollection(user);
+    await stage(user, file('Place.md', 'A passage with a place.'));
+    await user.click(await screen.findByRole('button', { name: /Import selected files \(1\)/ }));
+    const reader = await screen.findByRole('article', { name: 'Place' });
+    await screen.findByText('Map into Watchtower');
+    await user.click(
+      within(reader).getByRole('button', { name: 'Create a Watchtower source from this document' }),
+    );
+    const sourceForm = await screen.findByRole('form', { name: 'Create source from document' });
+    await user.type(within(sourceForm).getByLabelText('Author'), 'A. Author');
+    await user.click(
+      within(sourceForm).getByLabelText('I confirm creating this source in Watchtower'),
+    );
+    await user.click(within(sourceForm).getByRole('button', { name: 'Create source and link it' }));
+
+    const form = await screen.findByRole('form', { name: 'Record excerpt' });
+    const source = within(form).getByLabelText('Source');
+    await user.selectOptions(source, within(source).getByRole('option', { name: 'Place' }));
+    await user.selectOptions(within(form).getByLabelText('Event'), 'Create a new event…');
+    await user.type(within(form).getByLabelText('New event title'), 'Synthetic event');
+    await user.selectOptions(
+      within(form).getByLabelText('How do you classify this excerpt?'),
+      'Interpretation',
+    );
+    await user.type(within(form).getByLabelText('Excerpt text'), 'A passage with a place.');
+    const location = within(form).getByLabelText('Location in the document (optional)');
+    fireEvent.change(location, { target: { value: 'page\t3' } });
+    await user.click(within(form).getByLabelText('I confirm this classification'));
+    await user.click(within(form).getByRole('button', { name: 'Save excerpt' }));
+
+    expect(await within(form).findByRole('alert')).toHaveTextContent(/location/i);
+    let snapshot = await api.getWatchtower();
+    expect([snapshot.events.length, snapshot.claims.length]).toEqual([0, 0]);
+    expect((await api.getResearchLinks()).excerpts).toEqual([]);
+
+    // The field is still editable; fix it and finish.
+    expect(location).toBeEnabled();
+    fireEvent.change(location, { target: { value: 'page 3' } });
+    await user.click(within(form).getByRole('button', { name: 'Save excerpt' }));
+    await screen.findByRole('list', { name: 'Recorded excerpts' });
+    snapshot = await api.getWatchtower();
+    expect([snapshot.events.length, snapshot.claims.length]).toEqual([1, 1]);
+    const excerpts = (await api.getResearchLinks()).excerpts;
+    expect(excerpts).toHaveLength(1);
+    expect(excerpts[0]?.location).toBe('page 3');
   });
 });
