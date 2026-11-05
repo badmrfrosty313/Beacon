@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { configure, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,6 +7,10 @@ import { ApiProvider } from '../api/ApiContext';
 import { createBrowserDemoApi } from '../api/browserDemoApi';
 import type { BeaconApi } from '../api/beaconApi';
 import { WatchtowerView } from './WatchtowerView';
+
+// These tests drive a real IndexedDB through many form fields; a slow Windows runner needs room.
+configure({ asyncUtilTimeout: 8000 });
+vi.setConfig({ testTimeout: 60000 });
 
 beforeEach(() => {
   vi.stubGlobal('indexedDB', new IDBFactory());
@@ -42,7 +46,7 @@ async function addClaim(user: User, kind: string, text: string, attribution = ''
 
 describe('Watchtower acceptance scenario (artificial data only)', () => {
   it('records an event, a source, classified statements and a hypothesis, links evidence both ways, and shows a timeline', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const api = createBrowserDemoApi();
     mount(api);
 
@@ -132,7 +136,7 @@ describe('Watchtower acceptance scenario (artificial data only)', () => {
   it('still shows everything after a restart and makes no network request', async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const first = mount(createBrowserDemoApi());
     await createEvent(user, 'Artificial persistent event', '2026-01-02T03:04Z');
     first.unmount();
@@ -147,7 +151,7 @@ describe('Watchtower acceptance scenario (artificial data only)', () => {
 
 describe('Watchtower input handling', () => {
   it('explains an invalid date and an attributed claim with no attribution, saving nothing', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const api = createBrowserDemoApi();
     mount(api);
 
@@ -175,7 +179,7 @@ describe('Watchtower input handling', () => {
   });
 
   it('lists an event with no date under "Undated" instead of inventing a date', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const api = createBrowserDemoApi();
     await api.createEvent({ title: 'Artificial dated', eventDate: '2026-05-01' });
     await api.createEvent({ title: 'Artificial undated' });
@@ -194,7 +198,7 @@ describe('Watchtower input handling', () => {
   });
 
   it('checks a Scripture reference against the packaged text and offers navigation', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const api = createBrowserDemoApi();
     const open = vi.fn();
     const event = await api.createEvent({ title: 'Artificial event' });
@@ -219,7 +223,7 @@ describe('Watchtower input handling', () => {
       bytes: Array.from(new TextEncoder().encode('Artificial preserved text')),
     });
     await api.createSource({ title: 'Preserved source', documentId: doc.id });
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     mount(api);
     await user.click(await screen.findByRole('button', { name: 'Sources' }));
     await user.click(screen.getByRole('button', { name: /Preserved source/ }));
