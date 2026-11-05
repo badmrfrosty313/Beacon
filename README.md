@@ -12,23 +12,26 @@
 > manually tested by a person**; its automated status is in [TASKS.md](TASKS.md).
 > **Sprint 003 (offline Scripture reader) is on branch `feature/sprint-003-scripture`; it has not
 > been launched or tried by a person**, and CI has not yet run on it. See [TASKS.md](TASKS.md).
+> **Sprint 004 (Watchtower research workspace) is on branch `feature/sprint-004-watchtower`; it has not
+> been launched or tried by a person.** See [TASKS.md](TASKS.md) for exactly what has been verified.
 > No advanced security or emergency functions should be assumed operational.
 
 BEACON is intended to make important information usable even when internet access, external accounts or AI services are unavailable. Its initial version focuses on a searchable local document archive, a transparent evidence-analysis workspace, and portable export/import.
 
 BEACON is a general-purpose tool. A user's theological, historical or geopolitical research can live in an **optional** research collection; it is not presented as verified emergency advice.
 
-## What exists today (Sprints 001 to 003)
+## What exists today (Sprints 001 to 004)
 
-- A dark-mode desktop window branded **PROJECT BEACON** with navigation for Archive, Scripture, Watchtower, Lifeline and Settings. Watchtower and Lifeline are clearly labeled **Not implemented** placeholders.
+- A dark-mode desktop window branded **PROJECT BEACON** with navigation for Archive, Scripture, Watchtower, Lifeline and Settings. Lifeline is a clearly labeled **Not implemented** placeholder.
 - A local **SQLite** database created on first launch in the per-user application-data directory, managed by **versioned, forward-only migrations**.
 - **Archive → Documents** (Sprint 002): import Markdown (`.md`) and plain-text (`.txt`) files (UTF-8, up to 1 MiB each), keep the exact original bytes with a SHA-256 fingerprint, search them offline with SQLite FTS5 (words, or `"exact phrases"`), and read them safely as plain text. Duplicates are detected by hash.
 - **Archive → Notes**: the Sprint 001 plain-text notes, unchanged.
 - **Scripture** (Sprint 003): the complete World English Bible (Protestant, 66 books; public domain, packaged with the app, see [ADR-014](DECISIONS.md)). Pick a book and chapter or type a reference (`John 3:16`, `Rev 13:16-18`, `1 John 4:1`, `Psalm 23`), read verse by verse, step to the previous/next chapter, select a verse or range, **copy the canonical reference**, or **Create note from reference** (a normal note whose first line is `Scripture reference: Revelation 13:18 (WEB)`; the note links back to the passage). No Scripture text is fetched at run time and BEACON adds no commentary. Regenerate or verify the packaged data with `npm run scripture:verify`.
+- **Watchtower** (Sprint 004): a private research workspace. Record **events** (with a stated date, or none), **sources** (author, publisher, address, published and retrieved dates, optional link to an Archive document), **statements** classified as *observation*, *attributed claim*, *interpretation* or *forecast*, and **hypotheses** (propositions with a status you control). Link evidence to a hypothesis as *supports*, *contradicts* or *context* with a written reason, and view an event-date-ordered timeline. BEACON never fetches a source address, never scores or concludes, and nothing leaves the device. See [ADR-015](DECISIONS.md). Limitations: no delete, no history, no export yet.
 - Everything is stored locally and survives closing and reopening the app. The hosted **browser demo** has the same workflow over IndexedDB, with a clearly labeled, simpler word search (see [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md)).
 - No account, no cloud connection, no telemetry, no external API, and no networking dependency.
 
-**Not implemented yet:** deleting or exporting documents, PDF/other formats, Watchtower records, Seed export/import, encryption at rest, backup, and Android packaging. Notes are **not encrypted**.
+**Not implemented yet:** deleting or exporting documents, PDF/other formats, deleting or exporting Watchtower records, Seed export/import, encryption at rest, backup, and Android packaging. Notes are **not encrypted**.
 
 ## Planned modules
 
@@ -36,7 +39,7 @@ BEACON is a general-purpose tool. A user's theological, historical or geopolitic
 | -------------- | ----------------------------------------------------------------------------- | --------------------- |
 | **Archive**    | Offline import, reading and full-text search for user-owned documents         | 0.1 (notes demo now)  |
 | **Scripture**  | Offline Bible reader, reference lookup and links into notes                   | 0.1 (Sprint 003)      |
-| **Watchtower** | Events, sources, hypotheses and evidence links, preserving provenance         | 0.1                   |
+| **Watchtower** | Events, sources, hypotheses and evidence links, preserving provenance         | 0.1 (Sprint 004)      |
 | **Seed**       | Versioned portable archive export/import with integrity checks                | 0.1                   |
 | **Lifeline**   | Curated practical preparedness references and checklists                      | 0.2                   |
 | **Network**    | Explore local device and off-grid communications using established systems    | 0.3, feasibility only |

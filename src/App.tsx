@@ -121,6 +121,12 @@ export default function App({
     setActive('scripture');
   }
 
+  function openArchiveDocuments() {
+    setScriptureRequest(null);
+    setArchiveSection('documents');
+    setActive('archive');
+  }
+
   function createNoteFromReference(seed: NoteSeed) {
     dispatch({ type: 'prefill', seed });
     // Leaving Scripture: drop any pending open-request so returning resumes the reader's
@@ -187,7 +193,9 @@ export default function App({
             onOpenDraft={openUnsavedDraft}
           />
         ) : null}
-        {active === 'watchtower' ? <WatchtowerView /> : null}
+        {active === 'watchtower' ? (
+          <WatchtowerView onOpenScripture={openScripture} onOpenArchive={openArchiveDocuments} />
+        ) : null}
         {active === 'lifeline' ? <LifelineView /> : null}
         {active === 'settings' ? <SettingsView /> : null}
       </main>

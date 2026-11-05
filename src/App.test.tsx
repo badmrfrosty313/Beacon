@@ -30,28 +30,27 @@ describe('navigation and branding', () => {
   it('labels the unimplemented modules in the navigation', () => {
     renderApp();
     const nav = screen.getByRole('navigation', { name: 'Modules' });
-    expect(within(nav).getAllByText('Not implemented')).toHaveLength(2);
-    expect(within(nav).getByRole('button', { name: /Watchtower.*Not implemented/ })).toBeVisible();
+    expect(within(nav).getAllByText('Not implemented')).toHaveLength(1);
     expect(within(nav).getByRole('button', { name: /Lifeline.*Not implemented/ })).toBeVisible();
   });
 
-  it.each([
-    ['Watchtower', /Planned for v0\.1, Sprint 004/],
-    ['Lifeline', /Planned for v0\.2/],
-  ])('shows a clearly labeled placeholder for %s', async (name, plannedFor) => {
-    const user = userEvent.setup();
-    renderApp();
-    await user.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
+  it.each([['Lifeline', /Planned for v0\.2/]])(
+    'shows a clearly labeled placeholder for %s',
+    async (name, plannedFor) => {
+      const user = userEvent.setup();
+      renderApp();
+      await user.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
 
-    expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
-    expect(screen.getByText('Not implemented yet')).toBeInTheDocument();
-    expect(screen.getByText(/Nothing in this section works yet/)).toBeInTheDocument();
-    expect(screen.getByText(plannedFor)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-  });
+      expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+      expect(screen.getByText('Not implemented yet')).toBeInTheDocument();
+      expect(screen.getByText(/Nothing in this section works yet/)).toBeInTheDocument();
+      expect(screen.getByText(plannedFor)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    },
+  );
 
   it('shows app information and honest storage limitations in Settings', async () => {
     const user = userEvent.setup();

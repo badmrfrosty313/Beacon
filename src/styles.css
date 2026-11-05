@@ -1022,3 +1022,142 @@ textarea {
     padding-inline: 8px;
   }
 }
+
+/* ---- Watchtower ---------------------------------------------------------------------- */
+
+.wt-form {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.wt-filters {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wt-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--border);
+}
+
+.wt-timeline-item {
+  position: relative;
+  padding: 0 0 16px 12px;
+}
+
+.wt-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.wt-timeline-date {
+  font-weight: 600;
+  margin: 0;
+}
+
+.wt-timeline-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.wt-undated-heading {
+  margin-top: 20px;
+}
+
+.kind-badge,
+.relation-badge,
+.availability {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Each class also differs by glyph and border style, so colour is never the only cue. */
+.kind-observation {
+  border-style: solid;
+  border-color: #3b8f6e;
+}
+
+.kind-attributed_claim {
+  border-style: dashed;
+  border-color: #4a7fc4;
+}
+
+.kind-interpretation {
+  border-style: dotted;
+  border-width: 2px;
+  border-color: #a76bc9;
+}
+
+.kind-forecast {
+  border-style: double;
+  border-width: 3px;
+  border-color: #d08a2a;
+}
+
+.relation-supports {
+  border-color: #3b8f6e;
+}
+
+.relation-contradicts {
+  border-color: #c4504a;
+}
+
+.relation-context {
+  border-style: dashed;
+}
+
+.availability-copy {
+  border-color: #3b8f6e;
+}
+
+.availability-meta {
+  border-style: dashed;
+  border-color: #d08a2a;
+}
+
+.wt-claims,
+.wt-evidence {
+  display: grid;
+  gap: 10px;
+}
+
+.wt-claim,
+.wt-link {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elev);
+}
+
+.wt-claim-text,
+.wt-explanation {
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+.wt-ref {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.wt-relations {
+  display: grid;
+  gap: 14px;
+}

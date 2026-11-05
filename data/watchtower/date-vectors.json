@@ -1,0 +1,338 @@
+{
+  "description": "Shared Watchtower date vectors, consumed by the Rust parser (src-tauri/src/watchtower/dates.rs) and the TypeScript parser (src/lib/watchtower/dates.test.ts). Expected values were computed independently with Python datetime.date.toordinal, not with the algorithm used by either implementation. sort = minutes since 1970-01-01T00:00Z at the start of the stated period; date-only values are UTC calendar dates.",
+  "event": [
+    {
+      "input": "2026",
+      "ok": true,
+      "text": "2026",
+      "precision": "year",
+      "sort": 29453760
+    },
+    {
+      "input": "2026-11",
+      "ok": true,
+      "text": "2026-11",
+      "precision": "month",
+      "sort": 29891520
+    },
+    {
+      "input": "2026-11-05",
+      "ok": true,
+      "text": "2026-11-05",
+      "precision": "day",
+      "sort": 29897280
+    },
+    {
+      "input": "2026-11-05T14:30Z",
+      "ok": true,
+      "text": "2026-11-05T14:30Z",
+      "precision": "minute",
+      "sort": 29898150
+    },
+    {
+      "input": "2026-11-05T14:30-05:00",
+      "ok": true,
+      "text": "2026-11-05T14:30-05:00",
+      "precision": "minute",
+      "sort": 29898450
+    },
+    {
+      "input": "2026-11-05T19:30+05:00",
+      "ok": true,
+      "text": "2026-11-05T19:30+05:00",
+      "precision": "minute",
+      "sort": 29898150
+    },
+    {
+      "input": "2026-11-05T14:30+05:30",
+      "ok": true,
+      "text": "2026-11-05T14:30+05:30",
+      "precision": "minute",
+      "sort": 29897820
+    },
+    {
+      "input": "0001-01-01",
+      "ok": true,
+      "text": "0001-01-01",
+      "precision": "day",
+      "sort": -1035593280
+    },
+    {
+      "input": "0001-01-01T00:00+05:00",
+      "ok": true,
+      "text": "0001-01-01T00:00+05:00",
+      "precision": "minute",
+      "sort": -1035593580
+    },
+    {
+      "input": "9999-12-31T23:59-23:59",
+      "ok": true,
+      "text": "9999-12-31T23:59-23:59",
+      "precision": "minute",
+      "sort": 4223373118
+    },
+    {
+      "input": "2024-02-29",
+      "ok": true,
+      "text": "2024-02-29",
+      "precision": "day",
+      "sort": 28486080
+    },
+    {
+      "input": "2000-02-29",
+      "ok": true,
+      "text": "2000-02-29",
+      "precision": "day",
+      "sort": 15863040
+    },
+    {
+      "input": "1900-02-28",
+      "ok": true,
+      "text": "1900-02-28",
+      "precision": "day",
+      "sort": -36732960
+    },
+    {
+      "input": "1969-12-31T23:59Z",
+      "ok": true,
+      "text": "1969-12-31T23:59Z",
+      "precision": "minute",
+      "sort": -1
+    },
+    {
+      "input": "1970-01-01",
+      "ok": true,
+      "text": "1970-01-01",
+      "precision": "day",
+      "sort": 0
+    },
+    {
+      "input": "2026-12",
+      "ok": true,
+      "text": "2026-12",
+      "precision": "month",
+      "sort": 29934720
+    },
+    {
+      "input": "0070",
+      "ok": true,
+      "text": "0070",
+      "precision": "year",
+      "sort": -999302400
+    },
+    {
+      "input": "0070-08-10",
+      "ok": true,
+      "text": "0070-08-10",
+      "precision": "day",
+      "sort": -998984160
+    },
+    {
+      "input": " 2026-11-05 ",
+      "ok": true,
+      "text": "2026-11-05",
+      "precision": "day",
+      "sort": 29897280
+    },
+    {
+      "input": "",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "   ",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "abc",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-1-5",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-05T14:30",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-05 14:30Z",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-05t14:30z",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-05T14:30z",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "12345",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "２０２６",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026/11/05",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-05T14:30+0500",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-11-0",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "20261105",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-13",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-00",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-02-30",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2023-02-29",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "1900-02-29",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-31",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "0000",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "0000-05-01",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-05T24:00Z",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-05T14:60Z",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-05T14:30+24:00",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-05T14:30+05:60",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-00-10",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-11-00",
+      "ok": false,
+      "code": "invalid_date"
+    }
+  ],
+  "calendar": [
+    {
+      "input": "2026",
+      "ok": true,
+      "text": "2026",
+      "precision": "year",
+      "sort": 29453760
+    },
+    {
+      "input": "2026-11",
+      "ok": true,
+      "text": "2026-11",
+      "precision": "month",
+      "sort": 29891520
+    },
+    {
+      "input": "2026-11-05",
+      "ok": true,
+      "text": "2026-11-05",
+      "precision": "day",
+      "sort": 29897280
+    },
+    {
+      "input": "0001-01-01",
+      "ok": true,
+      "text": "0001-01-01",
+      "precision": "day",
+      "sort": -1035593280
+    },
+    {
+      "input": "2026-11-05T14:30Z",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "",
+      "ok": false,
+      "code": "malformed"
+    },
+    {
+      "input": "2026-13",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "2026-02-30",
+      "ok": false,
+      "code": "invalid_date"
+    },
+    {
+      "input": "x",
+      "ok": false,
+      "code": "malformed"
+    }
+  ]
+}

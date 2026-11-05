@@ -76,8 +76,12 @@ fn existing_notes_survive_the_migration_that_adds_documents() {
 
     // Opening with the current build upgrades it in place.
     let conn = db::open_and_migrate(&path).unwrap();
-    // v2 added documents, v3 adds the read-only Scripture tables; notes must survive both.
-    assert_eq!(migrations::current_version(&conn).unwrap(), 3);
+    // v2 added documents, v3 the read-only Scripture tables, v4 the Watchtower records; notes
+    // must survive all of them.
+    assert_eq!(
+        migrations::current_version(&conn).unwrap(),
+        migrations::latest_version()
+    );
     let listed = notes::list(&conn).unwrap();
     assert_eq!(listed.len(), 1);
     let note = notes::get(&conn, listed[0].id).unwrap();

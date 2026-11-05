@@ -133,7 +133,7 @@ describe('browser-demo documents (IndexedDB)', () => {
     const api = createBrowserDemoApi();
     const doc = await api.importDocument({ name: 'proof.txt', bytes: bytesOf('original') });
     await new Promise<void>((resolve, reject) => {
-      const open = indexedDB.open('beacon-browser-demo-v1', 2);
+      const open = indexedDB.open('beacon-browser-demo-v1', 3);
       open.onerror = () => reject(open.error);
       open.onsuccess = () => {
         const tx = open.result.transaction('documents', 'readwrite');
@@ -151,7 +151,7 @@ describe('browser-demo documents (IndexedDB)', () => {
     await expect(api.getDocument(doc.id)).rejects.toMatchObject({ code: 'integrity' });
   });
 
-  it('keeps existing v1 notes when the database is upgraded to the documents schema', async () => {
+  it('keeps existing v1 notes when the database is upgraded to the current schema', async () => {
     await new Promise<void>((resolve, reject) => {
       const open = indexedDB.open('beacon-browser-demo-v1', 1);
       open.onupgradeneeded = () =>
@@ -173,7 +173,7 @@ describe('browser-demo documents (IndexedDB)', () => {
     const api = createBrowserDemoApi();
     expect((await api.listNotes()).map((note) => note.title)).toEqual(['Written by the old demo']);
     expect(await api.listDocuments()).toEqual([]);
-    expect((await api.getAppInfo()).schemaVersion).toBe(2);
+    expect((await api.getAppInfo()).schemaVersion).toBe(3);
     const doc = await api.importDocument({ name: 'new.txt', bytes: bytesOf('after upgrade') });
     expect(doc.id).toBe(1);
     expect(await api.listNotes()).toHaveLength(1);

@@ -16,6 +16,7 @@ import {
   type ScriptureOverview,
   type ScripturePassage,
   type SearchHit,
+  type WatchtowerSnapshot,
 } from '../api/types';
 import { validateDocument } from '../lib/documentValidation';
 import { MATCH_END, MATCH_START, parseSearchQuery } from '../lib/searchQuery';
@@ -32,6 +33,18 @@ function summaryOf(doc: Document): DocumentSummary {
     byteLength: doc.byteLength,
     importedAt: doc.importedAt,
   };
+}
+
+const EMPTY_WATCHTOWER: WatchtowerSnapshot = {
+  events: [],
+  sources: [],
+  claims: [],
+  hypotheses: [],
+  links: [],
+};
+
+async function unavailableWatchtower(): Promise<never> {
+  throw new ApiError('unavailable', 'The fake API does not store research records.');
 }
 
 export const DEFAULT_INFO: AppInfo = {
@@ -52,10 +65,11 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
 
   return {
     getAppInfo: vi.fn(async (): Promise<AppInfo> => info),
-    listNotes: vi.fn(async (): Promise<NoteSummary[]> =>
-      [...notes]
-        .sort((a, b) => b.id - a.id)
-        .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
+    listNotes: vi.fn(
+      async (): Promise<NoteSummary[]> =>
+        [...notes]
+          .sort((a, b) => b.id - a.id)
+          .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
     ),
     getNote: vi.fn(async (id: number): Promise<Note> => {
       const note = notes.find((candidate) => candidate.id === id);
@@ -97,8 +111,8 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
       documents = [...documents, created];
       return created;
     }),
-    listDocuments: vi.fn(async (): Promise<DocumentSummary[]> =>
-      [...documents].reverse().map(summaryOf),
+    listDocuments: vi.fn(
+      async (): Promise<DocumentSummary[]> => [...documents].reverse().map(summaryOf),
     ),
     getDocument: vi.fn(async (id: number): Promise<Document> => {
       const found = documents.find((candidate) => candidate.id === id);
@@ -126,12 +140,23 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
           return { id, title, format, snippet, importedAt };
         });
     }),
+    // Watchtower: the App-level tests only need an empty workspace. Behaviour is covered against
+    // the real IndexedDB adapter (browserWatchtower.test.ts, WatchtowerView.test.tsx).
+    getWatchtower: vi.fn(async (): Promise<WatchtowerSnapshot> => EMPTY_WATCHTOWER),
+    createEvent: vi.fn(unavailableWatchtower),
+    updateEvent: vi.fn(unavailableWatchtower),
+    createSource: vi.fn(unavailableWatchtower),
+    updateSource: vi.fn(unavailableWatchtower),
+    createClaim: vi.fn(unavailableWatchtower),
+    createHypothesis: vi.fn(unavailableWatchtower),
+    updateHypothesis: vi.fn(unavailableWatchtower),
+    createEvidenceLink: vi.fn(unavailableWatchtower),
     // Real packaged text through the same TypeScript engine the browser demo uses.
-    getScriptureOverview: vi.fn(async (): Promise<ScriptureOverview> =>
-      testScriptureEngine().overview(),
+    getScriptureOverview: vi.fn(
+      async (): Promise<ScriptureOverview> => testScriptureEngine().overview(),
     ),
-    lookupScripture: vi.fn(async (input: string): Promise<LookupResult> =>
-      testScriptureEngine().lookup(input),
+    lookupScripture: vi.fn(
+      async (input: string): Promise<LookupResult> => testScriptureEngine().lookup(input),
     ),
     getScriptureChapter: vi.fn(
       async (bookId: string, chapter: number): Promise<ScripturePassage> => {
