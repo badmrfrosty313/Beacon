@@ -113,10 +113,14 @@ function openDatabase(): Promise<IDBDatabase> {
  * Run `work` inside ONE transaction spanning several stores. A thrown error aborts the whole
  * transaction (nothing is written) and is re-thrown to the caller unchanged.
  */
-const runTransaction: RunTransaction = async (stores, mode, work) => {
+const runTransaction: RunTransaction = async <T>(
+  stores: string[],
+  mode: IDBTransactionMode,
+  work: (tx: IDBTransaction) => Promise<T>,
+): Promise<T> => {
   const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    let result: Awaited<ReturnType<typeof work>>;
+  return new Promise<T>((resolve, reject) => {
+    let result: T | undefined;
     let failure: unknown;
     let settled = false;
     const finish = (action: () => void) => {
@@ -132,7 +136,7 @@ const runTransaction: RunTransaction = async (stores, mode, work) => {
       finish(() => reject(unavailable()));
       return;
     }
-    tx.oncomplete = () => finish(() => (failure === undefined ? resolve(result) : reject(failure)));
+    tx.oncomplete = () => finish(() => (failure === undefined ? resolve(result as T) : reject(failure)));
     tx.onerror = () => finish(() => reject(failure ?? unavailable()));
     tx.onabort = () => finish(() => reject(failure ?? unavailable()));
     work(tx).then(
