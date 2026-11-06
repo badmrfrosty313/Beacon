@@ -6,9 +6,7 @@ import type { AppInfo } from '../api/types';
 import { SeedPanel } from './seed/SeedPanel';
 
 type InfoState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; info: AppInfo };
+  { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; info: AppInfo };
 
 export function SettingsView() {
   const api = useApi();

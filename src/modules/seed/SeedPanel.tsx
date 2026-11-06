@@ -64,9 +64,7 @@ interface Staged {
 }
 
 type Outcome =
-  | { kind: 'exported'; result: SeedExport }
-  | { kind: 'restored'; report: SeedPreview }
-  | null;
+  { kind: 'exported'; result: SeedExport } | { kind: 'restored'; report: SeedPreview } | null;
 
 export function SeedPanel() {
   const api = useApi();
