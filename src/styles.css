@@ -1189,3 +1189,61 @@ textarea {
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
+
+/* ---- Phones and narrow windows (Android, B-019) ------------------------------------------- */
+
+@media (max-width: 700px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .nav {
+    flex: 1 1 auto;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    width: auto;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .nav-tagline,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .button,
+  button {
+    min-height: 44px;
+  }
+
+  .mono {
+    overflow-wrap: anywhere;
+  }
+
+  .seed-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .content {
+    overflow-x: hidden;
+  }
+}
