@@ -33,6 +33,10 @@ function request<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+// instanceof is unreliable across realms (jsdom, structured clones); the tag is not.
+const isArrayBuffer = (value: unknown): value is ArrayBuffer =>
+  Object.prototype.toString.call(value) === '[object ArrayBuffer]';
+
 function bad(message: string): never {
   throw new ApiError('validation', message);
 }
@@ -183,8 +187,7 @@ export function createBrowserSeed(runTransaction: RunTransaction, maxDocuments: 
             const sha = row.values['sha256'];
             const format = row.values['format'];
             const title = String(row.values['title'] ?? 'untitled');
-            const bytes =
-              original instanceof ArrayBuffer ? new Uint8Array(original) : new Uint8Array(0);
+            const bytes = isArrayBuffer(original) ? new Uint8Array(original) : new Uint8Array(0);
             if (typeof sha !== 'string' || sha256Hex(bytes) !== sha || bytes.length === 0) {
               bad(
                 `The archived original for "${title}" is missing or damaged, so it cannot be exported. Re-import that file, then export again.`,

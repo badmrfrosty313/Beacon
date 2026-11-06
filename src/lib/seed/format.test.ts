@@ -81,7 +81,9 @@ describe('SEED package format', () => {
     ]);
     const parsed = parsePackage(bytes, 5);
     expect(parsed.rows[1]).toHaveLength(1);
-    expect(parsed.files.get(`originals/${sha}.txt`)).toEqual(original);
+    expect(Array.from(parsed.files.get(`originals/${sha}.txt`) ?? [])).toEqual(
+      Array.from(original),
+    );
     expect(parsed.packageSha256).toBe(sha256Hex(bytes));
   });
 
