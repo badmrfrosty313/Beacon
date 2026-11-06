@@ -426,7 +426,8 @@ fn identity(
         let mut value = row.values.get(*column).cloned().unwrap_or(Value::Null);
         if table.lower.contains(column) {
             if let Value::String(text) = &value {
-                value = Value::String(text.to_lowercase());
+                // SQLite's lower() (used by the collections unique index) folds ASCII only.
+                value = Value::String(text.to_ascii_lowercase());
             }
         }
         key.push(json!([column, value]));
@@ -557,6 +558,12 @@ pub fn export(conn: &Connection, data_dir: &Path) -> Result<Exported> {
         tables.insert(table.name.to_owned(), Value::Array(list));
     }
     let records = json!({ "tables": tables }).to_string().into_bytes();
+    // Never produce a package this implementation would refuse to restore.
+    if rows.iter().map(Vec::len).sum::<usize>() > MAX_ROWS || records.len() > MAX_RECORDS_BYTES {
+        return Err(AppError::Validation(
+            "The library has more records than a v0.1 SEED package can hold.".into(),
+        ));
+    }
 
     let mut entries = vec![Entry {
         path: RECORDS_PATH.to_owned(),
@@ -572,6 +579,11 @@ pub fn export(conn: &Connection, data_dir: &Path) -> Result<Exported> {
     }
     entries[1..].sort_by(|a, b| a.path.cmp(&b.path));
 
+    if entries.len() > MAX_ENTRIES {
+        return Err(AppError::Validation(
+            "The library has too many files for a v0.1 SEED package.".into(),
+        ));
+    }
     let manifest = json!({
         "format": FORMAT_NAME,
         "formatVersion": FORMAT_VERSION,

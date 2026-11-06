@@ -104,6 +104,11 @@ export function buildPackage(
     }),
   );
   if (manifest.length > MAX_MANIFEST_BYTES) reject('the library has too many files.');
+  if (entries.length > MAX_ENTRIES) reject('the library has too many files.');
+  const records = entries.find((entry) => entry.path === RECORDS_PATH);
+  if (records !== undefined && records.bytes.length > MAX_RECORDS_BYTES) {
+    reject('the records are larger than a v0.1 package allows.');
+  }
   const payload = entries.reduce((sum, entry) => sum + entry.bytes.length, 0);
   const total = MAGIC.length + 4 + manifest.length + payload;
   if (total > MAX_PACKAGE_BYTES) {
@@ -294,11 +299,15 @@ function parseRecords(bytes: Uint8Array): SeedRow[][] {
           reject(`a ${table.name} record lacks "${column}".`);
         }
         const value = object[column];
-        if (value !== null && typeof value !== 'string' && !Number.isSafeInteger(value)) {
-          reject(`${table.name}.${column} has an unsupported value type.`);
+        if (value === null) {
+          if (table.required.includes(column)) reject(`${table.name}.${column} is required.`);
+        } else if (table.ints.includes(column)) {
+          if (!Number.isSafeInteger(value)) reject(`${table.name}.${column} must be an integer.`);
+        } else if (typeof value !== 'string') {
+          reject(`${table.name}.${column} must be text.`);
         }
         const allowed = table.enums[column];
-        if (allowed !== undefined && !allowed.includes(value as string)) {
+        if (allowed !== undefined && value !== null && !allowed.includes(value as string)) {
           reject(`${table.name}.${column} has an unsupported value.`);
         }
         values[column] = value as CellValue;
@@ -339,6 +348,10 @@ function checkOriginals(rows: SeedRow[][], files: Map<string, Uint8Array>): void
 
 // ---- Identity ------------------------------------------------------------------------------
 
+/** SQLite's lower() folds ASCII only; identity must follow the database's uniqueness rule. */
+export const asciiLower = (text: string): string =>
+  text.replace(/[A-Z]/g, (letter) => letter.toLowerCase());
+
 /**
  * Identity hash of a row (same canonical JSON as the Rust side, so a library exported on
  * desktop recognises its own records in the browser demo and vice versa). `parents` maps
@@ -348,7 +361,7 @@ export function identityOf(tableIdx: number, row: SeedRow, parents: Map<string, 
   const table = TABLES[tableIdx] as TableSpec;
   const key = table.keyCols.map((column) => {
     let value = row.values[column] ?? null;
-    if (table.lower.includes(column) && typeof value === 'string') value = value.toLowerCase();
+    if (table.lower.includes(column) && typeof value === 'string') value = asciiLower(value);
     return [column, value];
   });
   const parentPart: [string, CellValue][] = [];

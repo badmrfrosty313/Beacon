@@ -15,6 +15,10 @@ export interface TableSpec {
   readonly lower: readonly string[];
   /** Columns restricted to a fixed set of values (the SQLite CHECK constraints). */
   readonly enums: Readonly<Record<string, readonly string[]>>;
+  /** NOT NULL columns (IndexedDB has no such constraint, so imports are checked here). */
+  readonly required: readonly string[];
+  /** Integer columns; every other column is text. */
+  readonly ints: readonly string[];
 }
 
 export const TABLES: readonly TableSpec[] = [
@@ -27,6 +31,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: [],
     enums: {},
+    required: ['title', 'body', 'created_at'],
+    ints: [],
   },
   {
     name: 'documents',
@@ -37,6 +43,16 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: [],
     enums: { format: ['md', 'txt'] },
+    required: [
+      'title',
+      'original_name',
+      'format',
+      'sha256',
+      'byte_length',
+      'content',
+      'imported_at',
+    ],
+    ints: ['byte_length'],
   },
   {
     name: 'research_collections',
@@ -47,6 +63,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: ['name'],
     enums: {},
+    required: ['name', 'created_at'],
+    ints: [],
   },
   {
     name: 'research_documents',
@@ -76,6 +94,21 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: [],
     enums: { format: ['md', 'txt', 'pdf'], visibility: ['private'] },
+    required: [
+      'collection_id',
+      'title',
+      'original_name',
+      'format',
+      'sha256',
+      'byte_length',
+      'content',
+      'extraction_method',
+      'text_truncated',
+      'visibility',
+      'imported_at',
+      'updated_at',
+    ],
+    ints: ['collection_id', 'byte_length', 'page_count', 'text_truncated'],
   },
   {
     name: 'watchtower_events',
@@ -94,6 +127,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: [],
     enums: { date_precision: ['year', 'month', 'day', 'minute'] },
+    required: ['title', 'created_at', 'updated_at'],
+    ints: ['event_sort'],
   },
   {
     name: 'watchtower_sources',
@@ -123,6 +158,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: ['document_id'],
     lower: [],
     enums: {},
+    required: ['title', 'created_at', 'updated_at'],
+    ints: ['document_id'],
   },
   {
     name: 'watchtower_claims',
@@ -145,6 +182,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: ['event_id', 'source_id'],
     lower: [],
     enums: { kind: ['observation', 'attributed_claim', 'interpretation', 'forecast'] },
+    required: ['event_id', 'kind', 'text', 'created_at', 'updated_at'],
+    ints: ['event_id', 'source_id'],
   },
   {
     name: 'watchtower_hypotheses',
@@ -155,6 +194,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: [],
     lower: [],
     enums: { status: ['open', 'under_review', 'set_aside'] },
+    required: ['title', 'statement', 'status', 'created_at', 'updated_at'],
+    ints: [],
   },
   {
     name: 'watchtower_links',
@@ -178,6 +219,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: ['hypothesis_id', 'claim_id', 'source_id', 'event_id'],
     lower: [],
     enums: { relation: ['supports', 'contradicts', 'context'] },
+    required: ['hypothesis_id', 'relation', 'explanation', 'created_at'],
+    ints: ['hypothesis_id', 'claim_id', 'source_id', 'event_id'],
   },
   {
     name: 'research_source_links',
@@ -191,6 +234,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: ['research_document_id', 'source_id'],
     lower: [],
     enums: {},
+    required: ['research_document_id', 'source_id', 'created_at'],
+    ints: ['research_document_id', 'source_id'],
   },
   {
     name: 'research_excerpts',
@@ -205,6 +250,8 @@ export const TABLES: readonly TableSpec[] = [
     keyFks: ['claim_id'],
     lower: [],
     enums: {},
+    required: ['research_document_id', 'claim_id', 'created_at'],
+    ints: ['research_document_id', 'claim_id'],
   },
 ];
 

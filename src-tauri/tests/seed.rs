@@ -636,3 +636,54 @@ fn an_empty_library_exports_and_restores() {
     restore(&other, &package).unwrap();
     assert_eq!(counts(&other), vec![0; 11]);
 }
+
+/// SQLite's lower() folds ASCII only, so "Ä" and "ä" are two different collections to the
+/// database; a backup must keep both (review finding).
+#[test]
+fn collections_that_differ_only_by_non_ascii_case_stay_separate() {
+    let dir = tempfile::tempdir().unwrap();
+    let state = AppState::initialize(dir.path().to_path_buf());
+    state
+        .with_db(|conn| {
+            for name in ["Ä research", "ä research", "Plain", "PLAIN2"] {
+                research::create_collection(
+                    conn,
+                    &CollectionInput {
+                        name: name.into(),
+                        description: Some(format!("about {name}")),
+                    },
+                )?;
+            }
+            Ok(())
+        })
+        .unwrap();
+    let package = export(&state);
+    let other = AppState::initialize(tempfile::tempdir().unwrap().path().to_path_buf());
+    restore(&other, &package).unwrap();
+    assert_eq!(count(&other, "research_collections"), 4);
+    // And restoring again still adds nothing.
+    let again = restore(&other, &package).unwrap();
+    assert!(again.tables.iter().all(|t| t.added == 0));
+}
+
+/// Export must refuse to produce a package that restore would refuse (review finding).
+#[test]
+fn export_refuses_a_library_larger_than_restore_accepts() {
+    let dir = tempfile::tempdir().unwrap();
+    let state = AppState::initialize(dir.path().to_path_buf());
+    state
+        .with_db(|conn| {
+            let tx = conn.unchecked_transaction()?;
+            for n in 0..50_001 {
+                tx.execute(
+                    "INSERT INTO notes (title, body) VALUES (?1, '')",
+                    [format!("n{n}")],
+                )?;
+            }
+            tx.commit()?;
+            Ok(())
+        })
+        .unwrap();
+    let result = state.with_db(|conn| seed::export(conn, state.data_dir()));
+    assert!(matches!(result, Err(AppError::Validation(_))));
+}

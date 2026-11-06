@@ -4,6 +4,7 @@ import { ApiError, type SeedPreview, type SeedTableCount } from './types';
 import { sha256Hex } from '../lib/sha256';
 import {
   DOC_DIR,
+  MAX_ROWS,
   RECORDS_PATH,
   RESEARCH_DIR,
   SENSITIVITY_WARNING,
@@ -177,6 +178,9 @@ export function createBrowserSeed(runTransaction: RunTransaction, maxDocuments: 
     exportSeed: () =>
       guarded(async () => {
         const { rows, stored } = await runTransaction(STORES, 'readonly', readLocal);
+        if (rows.reduce((sum, table) => sum + table.length, 0) > MAX_ROWS) {
+          bad('The library has more records than a v0.1 SEED package can hold.');
+        }
         const entries: Entry[] = [];
         for (const [tableIdx, dir] of [
           [DOCUMENTS, DOC_DIR],

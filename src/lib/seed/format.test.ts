@@ -199,4 +199,46 @@ describe('SEED package format', () => {
     const parsed = parsePackage(base({ ...empty, watchtower_claims: [claim] }), 5);
     expect(() => identityOf(6, parsed.rows[6]![0]!, new Map())).toThrow(SeedFormatError);
   });
+
+  it('accepts undated events (null date precision) but rejects nulls and wrong types elsewhere', () => {
+    const base = (tables: Record<string, unknown>) =>
+      forge([{ path: RECORDS_PATH, bytes: enc(JSON.stringify({ tables })) }]);
+    const empty: Record<string, unknown> = {};
+    for (const table of TABLES) empty[table.name] = [];
+    const undated = {
+      id: 1,
+      title: 'Undated',
+      description: null,
+      event_date: null,
+      date_precision: null,
+      event_sort: null,
+      created_at: 'x',
+      updated_at: 'x',
+    };
+    expect(() => parsePackage(base({ ...empty, watchtower_events: [undated] }), 5)).not.toThrow();
+    const collection = { id: 1, name: 'C', description: null, created_at: 'x' };
+    expect(() =>
+      parsePackage(base({ ...empty, research_collections: [collection] }), 5),
+    ).not.toThrow();
+    for (const bad of [{ name: null }, { name: 5 }, { created_at: null }]) {
+      expect(() =>
+        parsePackage(base({ ...empty, research_collections: [{ ...collection, ...bad }] }), 5),
+      ).toThrow(SeedFormatError);
+    }
+    expect(() =>
+      parsePackage(base({ ...empty, watchtower_events: [{ ...undated, event_sort: 'soon' }] }), 5),
+    ).toThrow(SeedFormatError);
+  });
+
+  it('folds case like SQLite (ASCII only) when identifying collections', () => {
+    const row = (name: string) => ({ id: 1, values: { name, description: null, created_at: 'x' } });
+    const a = identityOf(2, row('Plain'), new Map());
+    expect(identityOf(2, row('PLAIN'), new Map())).toBe(a);
+    expect(identityOf(2, row('Ä'), new Map())).not.toBe(identityOf(2, row('ä'), new Map()));
+  });
+
+  it('refuses to build a package its own parser would reject', () => {
+    const big = { path: RECORDS_PATH, bytes: new Uint8Array(32 * 1024 * 1024 + 1) };
+    expect(() => buildPackage(META, [big])).toThrow(SeedFormatError);
+  });
 });
