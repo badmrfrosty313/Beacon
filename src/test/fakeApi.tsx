@@ -68,10 +68,11 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
 
   return {
     getAppInfo: vi.fn(async (): Promise<AppInfo> => info),
-    listNotes: vi.fn(async (): Promise<NoteSummary[]> =>
-      [...notes]
-        .sort((a, b) => b.id - a.id)
-        .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
+    listNotes: vi.fn(
+      async (): Promise<NoteSummary[]> =>
+        [...notes]
+          .sort((a, b) => b.id - a.id)
+          .map(({ id, title, createdAt }) => ({ id, title, createdAt })),
     ),
     getNote: vi.fn(async (id: number): Promise<Note> => {
       const note = notes.find((candidate) => candidate.id === id);
@@ -113,8 +114,8 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
       documents = [...documents, created];
       return created;
     }),
-    listDocuments: vi.fn(async (): Promise<DocumentSummary[]> =>
-      [...documents].reverse().map(summaryOf),
+    listDocuments: vi.fn(
+      async (): Promise<DocumentSummary[]> => [...documents].reverse().map(summaryOf),
     ),
     getDocument: vi.fn(async (id: number): Promise<Document> => {
       const found = documents.find((candidate) => candidate.id === id);
@@ -145,6 +146,9 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
     // Watchtower: the App-level tests only need an empty workspace. Behaviour is covered against
     // the real IndexedDB adapter (browserWatchtower.test.ts, WatchtowerView.test.tsx).
     getWatchtower: vi.fn(async (): Promise<WatchtowerSnapshot> => EMPTY_WATCHTOWER),
+    exportSeed: vi.fn(unavailableWatchtower),
+    inspectSeed: vi.fn(unavailableWatchtower),
+    restoreSeed: vi.fn(unavailableWatchtower),
     createEvent: vi.fn(unavailableWatchtower),
     updateEvent: vi.fn(unavailableWatchtower),
     createSource: vi.fn(unavailableWatchtower),
@@ -163,18 +167,20 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
     getResearch: vi.fn(unavailableWatchtower),
     searchResearch: vi.fn(async () => []),
     updateResearchMetadata: vi.fn(unavailableWatchtower),
-    getResearchLinks: vi.fn(async (): Promise<ImportedLinks> => ({
-      sourceLinks: [],
-      excerpts: [],
-    })),
+    getResearchLinks: vi.fn(
+      async (): Promise<ImportedLinks> => ({
+        sourceLinks: [],
+        excerpts: [],
+      }),
+    ),
     linkResearchSource: vi.fn(unavailableWatchtower),
     linkResearchExcerpt: vi.fn(unavailableWatchtower),
     // Real packaged text through the same TypeScript engine the browser demo uses.
-    getScriptureOverview: vi.fn(async (): Promise<ScriptureOverview> =>
-      testScriptureEngine().overview(),
+    getScriptureOverview: vi.fn(
+      async (): Promise<ScriptureOverview> => testScriptureEngine().overview(),
     ),
-    lookupScripture: vi.fn(async (input: string): Promise<LookupResult> =>
-      testScriptureEngine().lookup(input),
+    lookupScripture: vi.fn(
+      async (input: string): Promise<LookupResult> => testScriptureEngine().lookup(input),
     ),
     getScriptureChapter: vi.fn(
       async (bookId: string, chapter: number): Promise<ScripturePassage> => {

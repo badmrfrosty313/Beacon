@@ -20,6 +20,7 @@ import {
   type RunTransaction,
 } from './browserWatchtower';
 import { RESEARCH_STORES, createBrowserResearch } from './browserResearch';
+import { createBrowserSeed } from './browserSeed';
 import { sha256Hex } from '../lib/sha256';
 import { matchDocument, tokenize } from '../lib/wordSearch';
 import { validateNote } from '../lib/validation';
@@ -419,6 +420,7 @@ export function createBrowserDemoApi(): BeaconApi {
       WATCHTOWER_STORES.sources,
       WATCHTOWER_STORES.claims,
     ),
+    ...createBrowserSeed(runTransaction, MAX_DEMO_DOCUMENTS),
     // Scripture is read-only reference data bundled with the demo, not stored in IndexedDB, so
     // none of it can touch (or be lost with) the user's notes and documents.
     async getScriptureOverview(): Promise<ScriptureOverview> {

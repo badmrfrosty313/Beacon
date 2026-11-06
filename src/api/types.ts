@@ -133,7 +133,8 @@ export interface ReferenceProblem {
 
 /** An unusable reference is an expected outcome, reported as data rather than an error. */
 export type LookupResult =
-  { ok: true; passage: ScripturePassage } | { ok: false; problem: ReferenceProblem };
+  | { ok: true; passage: ScripturePassage }
+  | { ok: false; problem: ReferenceProblem };
 
 /** Watchtower: private, local research records. Mirrors src-tauri/src/watchtower/mod.rs. */
 
@@ -399,4 +400,41 @@ export interface ResearchImportInput extends Partial<ResearchMetadata> {
   extractionMethod?: string;
   pageCount?: number;
   textTruncated?: boolean;
+}
+
+// ---- SEED backup and restore ----------------------------------------------------------------
+// A `.beacon` package holds the whole library (notes, Archive, Research, Watchtower) with every
+// original byte for byte. It is NOT encrypted or signed: SHA-256 digests catch corruption but do
+// not prove who made the file.
+
+export interface SeedTableCount {
+  table: string;
+  total: number;
+  /** Records that would be (or were) inserted. */
+  added: number;
+  /** Records skipped because an identical record already exists. */
+  existing: number;
+}
+
+export interface SeedPreview {
+  formatVersion: number;
+  appVersion: string;
+  schemaVersion: number;
+  createdAt: string;
+  /** SHA-256 of the whole file; pass it back to `restoreSeed` to confirm what was previewed. */
+  packageSha256: string;
+  byteLength: number;
+  /** Original files in the package. */
+  fileCount: number;
+  tables: SeedTableCount[];
+  warnings: string[];
+}
+
+export interface SeedExport {
+  fileName: string;
+  bytes: Uint8Array;
+  byteLength: number;
+  packageSha256: string;
+  tables: SeedTableCount[];
+  warnings: string[];
 }

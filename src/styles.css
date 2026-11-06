@@ -1161,3 +1161,31 @@ textarea {
   display: grid;
   gap: 14px;
 }
+
+.banner-warning {
+  border-color: var(--warn, #b7791f);
+}
+
+.seed-panel {
+  margin-top: 8px;
+}
+
+.seed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.seed-table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.seed-table th,
+.seed-table td {
+  padding: 4px 12px 4px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}

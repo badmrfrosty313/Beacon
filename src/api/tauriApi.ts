@@ -2,7 +2,8 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { BeaconApi } from './beaconApi';
 import { toApiError } from './errors';
-import { bytesToBase64 } from '../lib/base64';
+import { base64ToBytes, bytesToBase64 } from '../lib/base64';
+import { MAX_PACKAGE_BYTES as SEED_MAX_BYTES } from '../lib/seed/format';
 import {
   ApiError,
   type AppInfo,
@@ -33,6 +34,8 @@ import {
   type ScriptureOverview,
   type ScripturePassage,
   type SearchHit,
+  type SeedExport,
+  type SeedPreview,
 } from './types';
 
 /** Minimal shape of Tauri's `invoke`, injectable for tests. */
@@ -106,6 +109,17 @@ export function createTauriApi(invokeFn: InvokeFn = guardedInvoke): BeaconApi {
         claimId,
         location: location ?? null,
       }),
+    exportSeed: async () => {
+      const { data, ...rest } = await call<Omit<SeedExport, 'bytes'> & { data: string }>(
+        'seed_export',
+      );
+      const bytes = base64ToBytes(data, SEED_MAX_BYTES);
+      if (bytes === null) throw new ApiError('internal', 'The backup could not be read back.');
+      return { ...rest, bytes };
+    },
+    inspectSeed: (bytes) => call<SeedPreview>('seed_inspect', { data: bytesToBase64(bytes) }),
+    restoreSeed: (bytes, confirmSha256) =>
+      call<SeedPreview>('seed_restore', { data: bytesToBase64(bytes), confirmSha256 }),
     getWatchtower: () => call<WatchtowerSnapshot>('watchtower_snapshot'),
     createEvent: (input: EventInput) => call<ResearchEvent>('watchtower_create_event', { input }),
     updateEvent: (id, input) => call<ResearchEvent>('watchtower_update_event', { id, input }),

@@ -21,3 +21,35 @@ export function bytesToBase64(bytes: Uint8Array): string {
   }
   return parts.join('');
 }
+
+/**
+ * Strict standard base64 decoder (padding required, no whitespace). Returns `null` for anything
+ * malformed or longer than `maxBytes` once decoded.
+ */
+export function base64ToBytes(text: string, maxBytes: number): Uint8Array | null {
+  if (text.length % 4 !== 0) return null;
+  const padding = text.endsWith('==') ? 2 : text.endsWith('=') ? 1 : 0;
+  const length = (text.length / 4) * 3 - padding;
+  if (length > maxBytes) return null;
+  const out = new Uint8Array(length);
+  let o = 0;
+  for (let i = 0; i < text.length; i += 4) {
+    let n = 0;
+    for (let j = 0; j < 4; j += 1) {
+      const ch = text[i + j] as string;
+      let v: number;
+      if (ch === '=') {
+        if (i + 4 !== text.length || j < 4 - padding) return null;
+        v = 0;
+      } else {
+        v = ALPHABET.indexOf(ch);
+        if (v < 0) return null;
+      }
+      n = (n << 6) | v;
+    }
+    if (o < length) out[o++] = (n >> 16) & 255;
+    if (o < length) out[o++] = (n >> 8) & 255;
+    if (o < length) out[o++] = n & 255;
+  }
+  return out;
+}

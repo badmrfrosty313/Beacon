@@ -46,3 +46,18 @@ fn garbage_is_rejected_without_panicking() {
         assert!(matches!(parse(input), Err(AppError::Validation(_))));
     }
 }
+
+/// The same vector is asserted in src/lib/seed/format.test.ts: desktop and browser demo must
+/// agree on record identity, or a package would never recognise the other platform's records.
+#[test]
+fn record_identity_matches_the_cross_platform_vector() {
+    let mut values = Map::new();
+    values.insert("title".into(), json!("T"));
+    values.insert("body".into(), json!("B"));
+    values.insert("created_at".into(), json!("2026-01-01T00:00:00.000Z"));
+    let row = Row { id: 7, values };
+    assert_eq!(
+        identity(0, &row, &HashMap::new()).unwrap(),
+        "ebd3675b71c2b6e8212091a463c4730966f7797e915f4c4957781072253f0d65"
+    );
+}

@@ -32,6 +32,8 @@ import type {
   ScriptureOverview,
   ScripturePassage,
   SearchHit,
+  SeedExport,
+  SeedPreview,
 } from './types';
 
 /**
@@ -86,4 +88,12 @@ export interface BeaconApi {
     claimId: number,
     location?: string,
   ): Promise<ImportedExcerpt>;
+
+  // SEED: portable backup and restore. Export reads the whole library and changes nothing.
+  // Restore is additive and all-or-nothing: `inspectSeed` validates and previews without
+  // writing; `restoreSeed` needs the digest `inspectSeed` returned. Existing records are never
+  // overwritten or deleted, and records already present are skipped, so repeats add nothing.
+  exportSeed(): Promise<SeedExport>;
+  inspectSeed(bytes: Uint8Array): Promise<SeedPreview>;
+  restoreSeed(bytes: Uint8Array, confirmSha256: string): Promise<SeedPreview>;
 }
