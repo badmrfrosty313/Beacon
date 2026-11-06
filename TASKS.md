@@ -75,7 +75,7 @@ Updated: 2026-11-06. Unchecked work is not implemented. Code agents should updat
 **Manual native acceptance (Windows, not yet done by anyone):** with the network off, open **Archive → Research**; create a collection `Test research`; choose an invented `.md` file and a text-layer PDF; check the preview shows the file name, type, SHA-256, extraction method and limitations, and that nothing appears in the library yet; pick the collection, leave one file unchecked and import; open the imported document and confirm the fingerprint and "re-checked just now"; import the same file again and expect "Already imported" and no second record; search a word from the text; create a Watchtower source from the document, record an excerpt classified as *Interpretation* and attach it to a hypothesis as *Contradicts*; close and reopen the app and confirm everything is still there; try a scanned (image-only) PDF and expect the explanation. Use invented material only; do not put real research in the repository.
 
 ## Sprint 006: Seed
-> **Sprint 006 status: implemented on `feature/first-light-completion` (draft PR #11, not merged). CI-verified** (Windows `CI` run 42232945822 on `ad316fd`: Rust 173 unit + 12 SEED integration tests among others; `Browser Demo` run 42232945585). **Manually verified: nothing.** Boxes stay unchecked until the owner's acceptance pass ([docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)).
+> **Sprint 006 status: implemented on `feature/first-light-completion` (draft PR #11, not merged). CI-verified** (Windows `CI` run 42237713024 on `62ddcc4`: 470 Vitest and 173 unit + 29 integration Rust tests (14 SEED integration); Codex clean; `Browser Demo` run 42232945585). **Manually verified: nothing.** Boxes stay unchecked until the owner's acceptance pass ([docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)).
 
 - [ ] **B-016:** Versioned manifest and export archive preserving originals and metadata.
   - Implemented: single-file `.beacon` container (ADR-017, [docs/SEED.md](docs/SEED.md)); every user table plus originals byte for byte; manifest with per-entry SHA-256; Rust and browser-demo implementations sharing one format and identity function (cross-checked by a shared test vector); Settings UI with a "not encrypted" warning.
@@ -86,7 +86,7 @@ Updated: 2026-11-06. Unchecked work is not implemented. Code agents should updat
   - Limits: SEED is **not encrypted or signed**; manifest descriptive text is not digest-covered; 64 MiB package cap, whole package in memory.
 
 ## Sprint 007: Android
-> **Sprint 007 status: APK builds and starts on an emulator (CI-verified, Android run 42232945829). The physical-device hardware gate is PENDING and has not been attempted by anyone.**
+> **Sprint 007 status: APK builds and starts on an emulator (CI-verified, Android run 42237713030). The physical-device hardware gate is PENDING and has not been attempted by anyone.**
 
 - [ ] **B-019:** Android package and real-device offline test.
   - Done (CI): Tauri Android project generated in CI, arm64 test-signed APK artifact, x86_64 emulator smoke (launch, alive, `beacon.db` created, no INTERNET), mobile-responsive layout (≤700 px: top navigation, 44 px targets).

@@ -15,8 +15,8 @@ threat model, install/recovery documentation, a Windows test EXE on PR builds (B
 ## Validation, stated precisely
 | Level | What | Result |
 | --- | --- | --- |
-| CI (automated) | Prettier, ESLint, `tsc` strict, 467 Vitest tests (26 files, fake backend + fake-indexeddb), 173 Rust unit + 27 Rust integration tests, Clippy `-D warnings`, `cargo fmt`, Scripture rebuild verification, Windows release build, bundle check | Passed on `ad316fd`; re-run on the final commit is recorded in the PR |
-| CI (Android) | arm64 release APK builds; x86_64 **emulator** launches the app, SQLite database created, no INTERNET permission | Passed on `ad316fd` |
+| CI (automated) | Prettier, ESLint, `tsc` strict, 470 Vitest tests (26 files, fake backend + fake-indexeddb), 173 Rust unit + 29 Rust integration tests, Clippy `-D warnings`, `cargo fmt`, Scripture rebuild verification, Windows release build, bundle check | Passed on `62ddcc4` (Windows `CI` run 42237713024, `Browser Demo` 42237713070, `Dependency audit` 42237713346); Codex review of that commit: no findings |
+| CI (Android) | arm64 release APK builds; x86_64 **emulator** launches the app, SQLite database created, no INTERNET permission | Passed on `62ddcc4` (Android run 42237713030) |
 | Browser | Hosted demo build and IndexedDB adapter incl. SEED (automated in jsdom) | Automated only; nobody has used the hosted demo by hand for this release |
 | Native (Windows) | A person launching this build, offline start, SEED round trip in the real window | **Not done** |
 | Device (Android) | Any physical device | **Not done: hardware gate pending** |
