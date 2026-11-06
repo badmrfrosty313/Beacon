@@ -13,6 +13,7 @@ use crate::research::{
     MetadataInput, ResearchDocument, ResearchSummary, SourceLink,
 };
 use crate::scripture::{self, LookupResult, ScriptureOverview, ScripturePassage};
+use crate::seed::{self, Exported, Preview, RestoreReport};
 use crate::state::{AppInfo, AppState};
 use crate::watchtower::{
     self, ClaimInput, ClaimRecord, EventInput, EventRecord, HypothesisInput, HypothesisRecord,
@@ -230,4 +231,25 @@ pub fn research_link_excerpt(
 #[tauri::command]
 pub fn research_links(state: State<'_, AppState>) -> Result<Links> {
     state.with_db(research::links)
+}
+
+#[tauri::command]
+pub fn seed_export(state: State<'_, AppState>) -> Result<Exported> {
+    state.with_db(|conn| seed::export(conn, state.data_dir()))
+}
+
+#[tauri::command]
+pub fn seed_inspect(state: State<'_, AppState>, data: String) -> Result<Preview> {
+    let bytes = seed::decode_package(&data)?;
+    state.with_db(|conn| seed::inspect(conn, &bytes))
+}
+
+#[tauri::command]
+pub fn seed_restore(
+    state: State<'_, AppState>,
+    data: String,
+    confirm_sha256: String,
+) -> Result<RestoreReport> {
+    let bytes = seed::decode_package(&data)?;
+    state.with_db(|conn| seed::restore(conn, state.data_dir(), &bytes, &confirm_sha256))
 }

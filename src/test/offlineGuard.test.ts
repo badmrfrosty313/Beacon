@@ -132,12 +132,13 @@ describe('dependency allowlists', () => {
     expect(cargoSection(toml, 'dependencies')).toEqual([
       'rusqlite',
       'serde',
+      'serde_json',
       'sha2',
       'tauri',
       'thiserror',
     ]);
     expect(cargoSection(toml, 'build-dependencies')).toEqual(['tauri-build']);
-    expect(cargoSection(toml, 'dev-dependencies')).toEqual(['serde_json', 'tempfile']);
+    expect(cargoSection(toml, 'dev-dependencies')).toEqual(['tempfile']);
   });
 
   it('JavaScript runtime dependencies are limited to the reviewed set', () => {
