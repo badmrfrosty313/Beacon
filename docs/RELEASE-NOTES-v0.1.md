@@ -24,6 +24,15 @@ threat model, install/recovery documentation, a Windows test EXE on PR builds (B
 Not claimed: security certification, production validation, encryption (at rest or in backups), signed
 distribution, accessibility certification, screen-reader testing.
 
+## Dependency audit (CI run 42235196772, informational)
+- `npm audit --omit=dev` (everything that ships in the app): **0 vulnerabilities**.
+- `cargo audit` (421 crates): no vulnerabilities; 2 allowed warnings in Tauri's Linux GUI stack (`proc-macro-error`
+  unmaintained, `glib` unsound), neither compiled into the Windows or Android builds.
+- `npm audit` including build tooling: 10 findings (2 critical via `tinypool`, 8 moderate via `vitest`/`@vitest/mocker`
+  and `minimatch` under typescript-eslint). These are **development tools only** (test runner, linter) and are not
+  in the shipped app. Fixing them means a breaking Vitest major upgrade, deliberately **not** done in this candidate;
+  do not run the test suite against untrusted code or mock files. Tracked as post-release maintenance.
+
 ## Artifacts
 - Windows: unsigned test EXE and SHA-256 in the Windows `CI` run artifact `beacon-windows-test` (PR #11).
 - Android: arm64 APK signed with a throwaway key, in the `Android` run artifact `beacon-android-arm64-test-signed`.

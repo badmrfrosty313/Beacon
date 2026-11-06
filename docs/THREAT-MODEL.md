@@ -15,7 +15,7 @@ signed**.
 | SEED package | Malformed records / SQL | Records are values bound as parameters; table and column names come from static lists; DB CHECK/FK constraints apply; dangling references rejected | tests |
 | SQL injection | User text in queries | Parameter binding everywhere; FTS queries parsed into literal terms | existing suites |
 | Network | Accidental requests/telemetry | No network crates/plugins; CSP `connect-src ipc:` only; static test bans `fetch`, XHR, WebSocket, URL literals; Android manifest has no INTERNET (CI-asserted) | `offlineGuard.test.ts`, Android workflow |
-| Dependencies | Known vulnerabilities | Lockfiles committed and used (`npm ci`, `--locked`); small allowlisted dependency set; `npm audit` run in CI (informational) | docs/RELEASE-NOTES |
+| Dependencies | Known vulnerabilities | Lockfiles committed and used (`npm ci`, `--locked`); small allowlisted dependency set; `npm audit`/`cargo audit` run in CI: 0 production npm findings; dev-tooling advisories listed in the release notes | docs/RELEASE-NOTES |
 | Local privacy | Other local users/malware, device loss | Not encrypted; relies on OS account/device security. Browser demo data is in IndexedDB and must hold dummy data only | README, Settings text |
 | Private research in public artifacts | Leaking real research into builds | Synthetic fixtures only; desktop bundle contains no browser-demo Scripture; no research bundled | CI bundle check, review |
 | Distribution | Fake builds | Windows EXE and Android APK are **unsigned / test-signed**; SHA-256 published for integrity only | release notes |
