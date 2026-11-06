@@ -1161,3 +1161,89 @@ textarea {
   display: grid;
   gap: 14px;
 }
+
+.banner-warning {
+  border-color: var(--warn, #b7791f);
+}
+
+.seed-panel {
+  margin-top: 8px;
+}
+
+.seed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.seed-table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.seed-table th,
+.seed-table td {
+  padding: 4px 12px 4px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---- Phones and narrow windows (Android, B-019) ------------------------------------------- */
+
+@media (max-width: 700px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .nav {
+    flex: 1 1 auto;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    width: auto;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  .nav-tagline,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .button,
+  button {
+    min-height: 44px;
+  }
+
+  .mono {
+    overflow-wrap: anywhere;
+  }
+
+  .seed-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .content {
+    overflow-x: hidden;
+  }
+}

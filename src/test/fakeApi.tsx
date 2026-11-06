@@ -145,6 +145,9 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
     // Watchtower: the App-level tests only need an empty workspace. Behaviour is covered against
     // the real IndexedDB adapter (browserWatchtower.test.ts, WatchtowerView.test.tsx).
     getWatchtower: vi.fn(async (): Promise<WatchtowerSnapshot> => EMPTY_WATCHTOWER),
+    exportSeed: vi.fn(unavailableWatchtower),
+    inspectSeed: vi.fn(unavailableWatchtower),
+    restoreSeed: vi.fn(unavailableWatchtower),
     createEvent: vi.fn(unavailableWatchtower),
     updateEvent: vi.fn(unavailableWatchtower),
     createSource: vi.fn(unavailableWatchtower),

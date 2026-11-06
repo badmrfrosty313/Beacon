@@ -12,17 +12,17 @@
 > manually tested by a person**; its automated status is in [TASKS.md](TASKS.md).
 > **Sprint 003 (offline Scripture reader) is on branch `feature/sprint-003-scripture`; it has not
 > been launched or tried by a person**, and CI has not yet run on it. See [TASKS.md](TASKS.md).
-> **Sprint 004 (Watchtower research workspace) is on branch `feature/sprint-004-watchtower`; it has not
-> been launched or tried by a person.** See [TASKS.md](TASKS.md) for exactly what has been verified.
-> **Sprint 005 (private research import) is on branch `feature/sprint-005-research-import`; it has not
-> been launched or tried by a person.** See [TASKS.md](TASKS.md) for exactly what has been verified.
+> **v0.1 "First Light" release candidate (Sprints 001 to 008) is on branch `feature/first-light-completion`
+> (draft PR #11, not merged).** Sprints 002 to 008 are CI-verified but have **not** been launched or tried by a
+> person, and Android has **not** run on a physical device. See [TASKS.md](TASKS.md) and
+> [docs/RELEASE-NOTES-v0.1.md](docs/RELEASE-NOTES-v0.1.md) for exactly what is and is not verified.
 > No advanced security or emergency functions should be assumed operational.
 
 BEACON is intended to make important information usable even when internet access, external accounts or AI services are unavailable. Its initial version focuses on a searchable local document archive, a transparent evidence-analysis workspace, and portable export/import.
 
 BEACON is a general-purpose tool. A user's theological, historical or geopolitical research can live in an **optional** research collection; it is not presented as verified emergency advice.
 
-## What exists today (Sprints 001 to 005)
+## What exists today (Sprints 001 to 008)
 
 - A dark-mode desktop window branded **PROJECT BEACON** with navigation for Archive, Scripture, Watchtower, Lifeline and Settings. Lifeline is a clearly labeled **Not implemented** placeholder.
 - A local **SQLite** database created on first launch in the per-user application-data directory, managed by **versioned, forward-only migrations**.
@@ -34,7 +34,10 @@ BEACON is a general-purpose tool. A user's theological, historical or geopolitic
 - Everything is stored locally and survives closing and reopening the app. The hosted **browser demo** has the same workflow over IndexedDB, with a clearly labeled, simpler word search (see [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md)).
 - No account, no cloud connection, no telemetry, no external API, and no networking dependency.
 
-**Not implemented yet:** deleting or exporting documents, PDF/other formats, deleting or exporting Watchtower records, Seed export/import, encryption at rest, backup, and Android packaging. Notes are **not encrypted**.
+- **Backup and restore (SEED)** (Sprint 006): Settings → *Create backup* writes one `.beacon` file holding every note, Archive document, research collection and document, and all Watchtower records, with the original files byte for byte and a SHA-256 for each part. *Restore* validates and previews first, then adds only what is new in one all-or-nothing step; nothing existing is overwritten or deleted, and restoring twice adds nothing. **A backup is not encrypted or signed**, so keep it private. See [docs/SEED.md](docs/SEED.md) and [ADR-017](DECISIONS.md).
+- **Android** (Sprint 007): the same app builds as an arm64 APK in CI and starts on an emulator with no network permission. It has **not** been tested on a real device. See [docs/ANDROID.md](docs/ANDROID.md).
+
+**Not implemented:** deleting records, encryption at rest, encrypted or signed backups, OCR, other document formats, and anything on the [out-of-scope list](ROADMAP.md). Notes are **not encrypted**.
 
 ## Planned modules
 
@@ -138,7 +141,7 @@ Rust, or Visual Studio Build Tools to run the downloaded binary.
 
 **This is not an installer** and it does not store data beside the EXE. Notes use the
 regular `%APPDATA%\\org.projectbeacon.desktop\\beacon.db` path. Do not use private or important
-notes until the app has passed its real-world testing and has a backup/export feature.
+notes until the app has passed its real-world testing. Use Settings → Create backup (SEED) regularly; backups are unencrypted.
 
 ## Build a release
 
@@ -179,7 +182,7 @@ Offline behaviour has an automated guard and a manual airplane-mode procedure; s
 | WAL files | `beacon.db-wal`, `beacon.db-shm` beside it (normal for SQLite) |
 | Imported originals | `%APPDATA%\org.projectbeacon.desktop\originals\<sha256>.md|txt` (exact bytes as imported) |
 
-Settings inside the app shows the exact path. To start from scratch, close BEACON and delete that folder. The database is **not encrypted**, so anyone with access to your Windows account can read it, and there is no backup or export yet: keep your own copies of anything important.
+Settings inside the app shows the exact path. To start from scratch, close BEACON and delete that folder. The database is **not encrypted**, so anyone with access to your Windows account can read it, and the SEED backup is also unencrypted: keep copies somewhere private.
 
 ## Project layout
 
@@ -207,14 +210,18 @@ Components never call Tauri directly: they use the `BeaconApi` interface, so the
 
 - Windows CI build passed and owner manually confirmed the downloaded native EXE launches and saved notes survive restarting. **Airplane-mode and clean first-launch checks are still outstanding**; see [TASKS.md](TASKS.md).
 - The frontend tests (Vitest) use an in-memory fake backend; they do not exercise Tauri IPC. The Rust tests exercise SQLite and migrations but not the Tauri command layer or window.
-- No lockfiles are committed yet (see above), so CI dependency versions are not pinned.
-- Notes can be created and viewed only. Documents can be imported, searched and read only: no edit, delete, rename, tags, export or backup yet (Seed export/import is Sprint 006).
+- Lockfiles (`package-lock.json`, `src-tauri/Cargo.lock`) are committed; CI uses `npm ci` and `--locked`.
+- Notes can be created and viewed only. Documents can be imported, searched and read only: no edit, delete, rename or tags. Use Settings → backup (SEED) to export.
 - Markdown is shown as source text, not rendered. Only UTF-8 `.md` and `.txt` up to 1 MiB are accepted; PDFs and other formats are rejected.
 - Search is word/phrase matching with FTS5 relevance ranking (best 100); no wildcards, `OR`/`NOT` operators or stemming. Documents and the search index are **not encrypted**.
 - The browser demo's search is a separate, simpler implementation and can return different results than the desktop app.
 - Plain text only; Markdown and HTML are displayed literally, never rendered.
 - Limits: titles up to 200 characters, note text up to 100,000 bytes, and the list shows at most the 1,000 newest notes.
-- Android has not been attempted.
+- Android builds and starts on an emulator but is unverified on a physical device; SEED export on Android is a known risk ([docs/ANDROID.md](docs/ANDROID.md)).
+
+## Release documents
+
+[Release notes](docs/RELEASE-NOTES-v0.1.md) · [Install, upgrade and recovery](docs/INSTALL.md) · [Release checklist](docs/RELEASE-CHECKLIST.md) · [Threat model](docs/THREAT-MODEL.md) · [Android](docs/ANDROID.md) · [SEED format](docs/SEED.md)
 
 ## Repository documents
 

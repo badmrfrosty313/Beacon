@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useApi } from '../api/ApiContext';
 import { errorMessage } from '../api/errors';
 import type { AppInfo } from '../api/types';
+import { SeedPanel } from './seed/SeedPanel';
 
 type InfoState =
   { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; info: AppInfo };
@@ -83,7 +84,8 @@ export function SettingsView() {
             data removes them.
           </li>
           <li>
-            No account, telemetry, sync, native file access, or export is included in the preview.
+            No account, telemetry, sync or native file access is included in the preview. The SEED
+            backup below downloads a file through the browser.
           </li>
           <li>
             Use dummy data only; never enter private research or sensitive information in this
@@ -98,9 +100,14 @@ export function SettingsView() {
             Notes are stored in a local SQLite database. They are <strong>not encrypted</strong> in
             this version, so anyone with access to this computer account can read them.
           </li>
-          <li>There is no backup or export yet. Keep your own copies of anything important.</li>
+          <li>
+            Use the SEED backup below to make a portable copy. It is also unencrypted, so keep it
+            private.
+          </li>
         </ul>
       )}
+
+      <SeedPanel />
     </section>
   );
 }

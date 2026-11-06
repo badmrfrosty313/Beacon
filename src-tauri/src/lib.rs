@@ -6,6 +6,7 @@
 //! * `documents`: imported text originals, FTS5 search.
 //! * `scripture`: read-only packaged Scripture reference data and reference lookup.
 //! * `watchtower`: events, sources, claims, hypotheses and evidence links (private research).
+//! * `seed`: portable `.beacon` backup export, inspection and additive restore.
 //! * `db`: connection setup and versioned migrations.
 //! * `state`: data directory + connection lifecycle.
 //!
@@ -18,6 +19,7 @@ pub mod error;
 pub mod notes;
 pub mod research;
 pub mod scripture;
+pub mod seed;
 pub mod state;
 pub mod watchtower;
 
@@ -53,6 +55,9 @@ pub fn run() {
             commands::research_link_source,
             commands::research_link_excerpt,
             commands::research_links,
+            commands::seed_export,
+            commands::seed_inspect,
+            commands::seed_restore,
             commands::scripture_overview,
             commands::scripture_lookup,
             commands::scripture_chapter,
