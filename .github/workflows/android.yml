@@ -1,0 +1,121 @@
+# Android build and emulator smoke test (Sprint 007 / B-019).
+#
+# What this proves: the Tauri 2 Android project generates, the Rust core cross-compiles for
+# Android, an APK builds, and the app starts on an x86_64 EMULATOR and opens its SQLite database.
+# What it does NOT prove: behaviour on a physical device (see docs/ANDROID.md for the checklist).
+#
+# The release APK is signed with a throwaway key created on the runner, so it is installable for
+# testing but is NOT a distribution signature and cannot update a differently signed install.
+name: Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NDK_VERSION: 27.0.12077973
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install Android SDK components
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" "platforms;android-34" "build-tools;34.0.0"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - name: Rust Android targets
+        run: rustup target add aarch64-linux-android
+      - run: npm ci --no-audit --no-fund
+      - name: Generate the Android project
+        run: npx tauri android init --ci
+      - name: Remove the INTERNET permission (BEACON needs no network)
+        run: |
+          MANIFEST=src-tauri/gen/android/app/src/main/AndroidManifest.xml
+          sed -i '/android.permission.INTERNET/d' "$MANIFEST"
+          cat "$MANIFEST"
+          ! grep -q "permission.INTERNET" "$MANIFEST"
+      - name: Build release APK (arm64)
+        run: npx tauri android build --apk --target aarch64 --ci
+      - name: Test-sign the APK with a throwaway key
+        run: |
+          BT="$ANDROID_HOME/build-tools/34.0.0"
+          APK=$(find src-tauri/gen/android -name '*release-unsigned.apk' | head -n1)
+          echo "unsigned: $APK"
+          keytool -genkeypair -keystore "$RUNNER_TEMP/throwaway.jks" -storepass beacon-test -keypass beacon-test \
+            -alias test -keyalg RSA -keysize 2048 -validity 30 -dname "CN=BEACON throwaway test key"
+          "$BT/zipalign" -p 4 "$APK" "$RUNNER_TEMP/aligned.apk"
+          mkdir -p dist-android
+          "$BT/apksigner" sign --ks "$RUNNER_TEMP/throwaway.jks" --ks-pass pass:beacon-test --key-pass pass:beacon-test \
+            --out dist-android/beacon-first-light-arm64-TEST-SIGNED.apk "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" verify --verbose dist-android/beacon-first-light-arm64-TEST-SIGNED.apk
+          "$BT/aapt" dump permissions dist-android/beacon-first-light-arm64-TEST-SIGNED.apk | tee dist-android/permissions.txt
+          ! grep -q "permission.INTERNET" dist-android/permissions.txt
+          sha256sum dist-android/*.apk | tee dist-android/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beacon-android-arm64-test-signed
+          path: dist-android/
+          if-no-files-found: error
+
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install Android SDK components
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" "platforms;android-34" "build-tools;34.0.0"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - run: rustup target add x86_64-linux-android
+      - run: npm ci --no-audit --no-fund
+      - run: npx tauri android init --ci
+      - name: Remove the INTERNET permission
+        run: sed -i '/android.permission.INTERNET/d' src-tauri/gen/android/app/src/main/AndroidManifest.xml
+      - name: Build debug APK (x86_64, debuggable so the smoke test can inspect app storage)
+        run: npx tauri android build --debug --apk --target x86_64 --ci
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Smoke test on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash scripts/android-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-emulator-evidence
+          path: smoke-out/
+          if-no-files-found: ignore

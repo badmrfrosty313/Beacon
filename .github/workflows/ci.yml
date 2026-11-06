@@ -37,9 +37,8 @@ jobs:
           rustc --version
           cargo --version
 
-      # Switch to `npm ci` once package-lock.json is committed (and commit Cargo.lock too).
       - name: Install JavaScript dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Prettier
         id: prettier
@@ -87,7 +86,7 @@ jobs:
 
       - name: Build the desktop binary (no installer)
         if: ${{ !cancelled() }}
-        run: npm run tauri build -- --no-bundle
+        run: npm run tauri build -- --no-bundle -- --locked
 
       # The desktop app reads Scripture natively in Rust; the 4 MB browser-demo copy must not
       # be duplicated into its web bundle.
