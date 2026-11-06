@@ -99,9 +99,10 @@ jobs:
 
       # A no-installer test executable. This stores its SQLite DB in the normal
       # per-user app data folder; it is not a portable-data or signed release.
-      # Upload only trusted main-branch builds, never unreviewed PR binaries.
+      # Uploaded for main and for same-repository pull requests (owner acceptance builds). Pull
+      # requests from forks never publish binaries.
       - name: Prepare Windows test download and SHA-256
-        if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ success() && (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         shell: pwsh
         run: |
           $exe = "src-tauri/target/release/beacon.exe"
@@ -112,7 +113,7 @@ jobs:
           "$sha  beacon.exe" | Set-Content -Path "src-tauri/target/release/SHA256SUMS.txt" -Encoding ascii
 
       - name: Upload unsigned Windows test executable
-        if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ success() && (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         uses: actions/upload-artifact@v4
         with:
           name: beacon-windows-test
@@ -120,4 +121,4 @@ jobs:
             src-tauri/target/release/beacon.exe
             src-tauri/target/release/SHA256SUMS.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30

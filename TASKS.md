@@ -1,6 +1,6 @@
 # BEACON Task Queue
 
-Updated: 2026-11-02. Unchecked work is not implemented. Code agents should update this file on completion and link their PR or commit.
+Updated: 2026-11-06. Unchecked work is not implemented. Code agents should update this file on completion and link their PR or commit.
 
 ## Sprint 001: First Light Foundation
 **Objective:** Launch a working offline Windows app that can persist a simple record. Prefer a thin vertical slice over an elaborate scaffold.
@@ -37,7 +37,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 - [ ] **Browser demo (IndexedDB) parity:** import/list/read/search with a clearly labeled non-FTS5 word search; existing notes preserved by an in-place v1→v2 schema upgrade.
 
 ## Sprint 003: Scripture Navigation
-> **Sprint 003 status: implemented on `feature/sprint-003-scripture` (PR #5, draft); automated CI green on `ae7e036`; manual acceptance pending.** CI (Windows `ci.yml` and Ubuntu `browser-demo.yml`) passed: Prettier, ESLint, `tsc`, Vitest, `npm run scripture:verify` (rebuild from the pinned official ZIP), `cargo fmt`, `cargo test` (102 unit + integration, including complete-dataset install, v2→v3 upgrade keeping notes, tamper rejection), `clippy -D warnings`, the Windows release build, the desktop-bundle-has-no-Scripture check and the demo build. The first Windows run caught a borrow error in a Rust test and a stale schema-version assertion; both were fixed. Codex's P2 finding (stale reference reopened after leaving Scripture) was fixed with a regression test. **Nobody has launched the app or done the Revelation 13:18 workflow, close/reopen or airplane-mode checks by hand**; the Android real-device check is Sprint 007.
+> **Sprint 003 status: MERGED (PR #5, `d2db16e`); CI green; manual acceptance pending.** (Details of the pre-merge CI run follow.) CI (Windows `ci.yml` and Ubuntu `browser-demo.yml`) passed: Prettier, ESLint, `tsc`, Vitest, `npm run scripture:verify` (rebuild from the pinned official ZIP), `cargo fmt`, `cargo test` (102 unit + integration, including complete-dataset install, v2→v3 upgrade keeping notes, tamper rejection), `clippy -D warnings`, the Windows release build, the desktop-bundle-has-no-Scripture check and the demo build. The first Windows run caught a borrow error in a Rust test and a stale schema-version assertion; both were fixed. Codex's P2 finding (stale reference reopened after leaving Scripture) was fixed with a regression test. **Nobody has launched the app or done the Revelation 13:18 workflow, close/reopen or airplane-mode checks by hand**; the Android real-device check is Sprint 007.
 
 - [ ] **B-009:** Select a legally distributable content source and document its license.
   - Implemented: World English Bible, Protestant edition (`engwebp`, 66 books, 1,189 chapters, 31,103 verses) from the official eBible.org USFM ZIP (SHA-256 `a93df557…fdba`, 2,908,558 bytes, kept unmodified in `data/scripture/source/`). Public-domain and trademark terms recorded from the archive's own `copr.htm`; 70/70 manifest entries and the PGP signature were verified (key not trust-anchored; see ADR-014). `scripts/scripture/build-web.mjs` regenerates the packaged files and `--check` compares them with the committed copies. Five verses are footnote-only in the source and are kept empty and labelled, never filled in. Strong's numbers, footnotes, cross-references and headings are excluded. See ADR-014.
@@ -46,7 +46,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
   - Open: native Windows acceptance (Revelation 13:18 workflow, close/reopen, airplane mode), hosted-demo acceptance, Android real-device check (Sprint 007).
 
 ## Sprint 004: Watchtower
-> **Sprint 004 status: implemented on `feature/sprint-004-watchtower` (draft PR); CI results and the manual checks below are recorded only after they have actually run.** Nothing here has been launched or tried by a person. Verification is labelled below as **CI-verified** (a named GitHub Actions run), **locally verified** (run in the author's sandbox, which has no Rust crates or npm packages and so could not build the app or run Vitest) or **manually verified** (a person did it). At the time of writing the author had locally run only the pure TypeScript logic (date parsing against the shared vectors, validation, derived views) and the Rust date/validation logic compiled in isolation; the full Rust crate and every React/IndexedDB test await CI.
+> **Sprint 004 status: MERGED (PR #8, `d140706`); CI green; manual acceptance pending.** Verification labels used below: Nothing here has been launched or tried by a person. Verification is labelled below as **CI-verified** (a named GitHub Actions run), **locally verified** (run in the author's sandbox, which has no Rust crates or npm packages and so could not build the app or run Vitest) or **manually verified** (a person did it). At the time of writing the author had locally run only the pure TypeScript logic (date parsing against the shared vectors, validation, derived views) and the Rust date/validation logic compiled in isolation; the full Rust crate and every React/IndexedDB test await CI.
 
 - [ ] **B-011:** Create event/source/hypothesis records with explicit provenance fields.
   - Implemented: migration 0004 (five tables, CHECK/FK/unique constraints, restricted deletes), typed Rust create/update with transactions and validation, nine IPC commands, browser IndexedDB equivalents, create/edit forms. Four distinct times are never synthesised; a URL-only source is labelled metadata-only; an Archive document link is the only "preserved copy". See ADR-015.
@@ -62,7 +62,7 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 **Manual native acceptance (Windows, not yet done by anyone):** launch the EXE with the network off; create `Test bridge closure` dated `2026-03-10` and `Test earlier event` dated `2025-12`; create a source with a publisher, address and dates; add an observation, an attributed claim (with attribution), an interpretation and a forecast; create a hypothesis; link one statement as Supports and another as Contradicts with reasons; check the Timeline lists the 2025-12 event first and each statement kind has its own badge; Set aside then Reopen the hypothesis; close and reopen the app and confirm everything is still there. Use invented data only.
 
 ## Sprint 005: Research Import
-> **Sprint 005 status: implemented on `feature/sprint-005-research-import` (draft PR #10).** **CI-verified** on commit `4260481`: Windows `CI` run 42097308547 (Prettier, ESLint, tsc, Vitest, Scripture verification, Rust fmt/tests, Clippy, release build, bundle check) and `Browser Demo` run 42097308616 (all green). Real pdf.js extraction is tested in Vitest against hand-built synthetic PDFs. **Manually verified: nothing.** Nobody has launched the app or imported a file by hand.
+> **Sprint 005 status: MERGED (PR #10, `0523b49`); CI green; Codex clean.** **CI-verified** on commit `4260481`: Windows `CI` run 42097308547 (Prettier, ESLint, tsc, Vitest, Scripture verification, Rust fmt/tests, Clippy, release build, bundle check) and `Browser Demo` run 42097308616 (all green). Real pdf.js extraction is tested in Vitest against hand-built synthetic PDFs. **Manually verified: nothing.** Nobody has launched the app or imported a file by hand.
 
 - [ ] **B-014:** Owner-approved mapping of imported research into Watchtower; nothing published automatically.
   - Implemented: private research collections with neutral tags; per-file inclusion, preview and explicit confirmation; source-to-target mapping tables (`research_source_links`, `research_excerpts`) separate from Sprint 004 tables; a mapping panel (create source from document, record an excerpt with a classification the person must choose, optionally attach to a hypothesis as supports/contradicts/context, or attach a whole source); data-level `visibility = 'private'`; rights note separate from attribution; no publish/sync/upload code path; no Drive or API access. See ADR-016.
@@ -75,13 +75,31 @@ Updated: 2026-11-02. Unchecked work is not implemented. Code agents should updat
 **Manual native acceptance (Windows, not yet done by anyone):** with the network off, open **Archive → Research**; create a collection `Test research`; choose an invented `.md` file and a text-layer PDF; check the preview shows the file name, type, SHA-256, extraction method and limitations, and that nothing appears in the library yet; pick the collection, leave one file unchecked and import; open the imported document and confirm the fingerprint and "re-checked just now"; import the same file again and expect "Already imported" and no second record; search a word from the text; create a Watchtower source from the document, record an excerpt classified as *Interpretation* and attach it to a hypothesis as *Contradicts*; close and reopen the app and confirm everything is still there; try a scanned (image-only) PDF and expect the explanation. Use invented material only; do not put real research in the repository.
 
 ## Sprint 006: Seed
-- [ ] **B-016:** Versioned manifest and export archive preserving originals and metadata.
-- [ ] **B-017:** Verified import, restore to clean instance, safe path handling and rollback.
-- [ ] **B-018:** Corruption/tampering/oversized archive rejection tests.
+> **Sprint 006 status: implemented on `feature/first-light-completion` (draft PR #11, not merged). CI-verified** (Windows `CI` run 42232945822 on `ad316fd`: Rust 173 unit + 12 SEED integration tests among others; `Browser Demo` run 42232945585). **Manually verified: nothing.** Boxes stay unchecked until the owner's acceptance pass ([docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)).
 
-## Sprint 007–008: Mobile and Release
+- [ ] **B-016:** Versioned manifest and export archive preserving originals and metadata.
+  - Implemented: single-file `.beacon` container (ADR-017, [docs/SEED.md](docs/SEED.md)); every user table plus originals byte for byte; manifest with per-entry SHA-256; Rust and browser-demo implementations sharing one format and identity function (cross-checked by a shared test vector); Settings UI with a "not encrypted" warning.
+- [ ] **B-017:** Verified import, restore to clean instance, safe path handling and rollback.
+  - Implemented: parse-and-verify before any write; preview with new/existing counts; confirmation digest; additive identity-based merge (no overwrites, repeat restores add nothing); one transaction plus atomic content-addressed originals, rolled back on failure (tested); exact-path whitelist.
+- [ ] **B-018:** Corruption/tampering/oversized archive rejection tests.
+  - Implemented: byte-flip sweeps (Rust and TypeScript), truncation/padding, wrong magic/version/schema, lying sizes and digests, traversal and absolute/Windows paths, unreferenced and duplicate entries, dangling references, mid-restore database failure, library untouched after every rejection.
+  - Limits: SEED is **not encrypted or signed**; manifest descriptive text is not digest-covered; 64 MiB package cap, whole package in memory.
+
+## Sprint 007: Android
+> **Sprint 007 status: APK builds and starts on an emulator (CI-verified, Android run 42232945829). The physical-device hardware gate is PENDING and has not been attempted by anyone.**
+
 - [ ] **B-019:** Android package and real-device offline test.
+  - Done (CI): Tauri Android project generated in CI, arm64 test-signed APK artifact, x86_64 emulator smoke (launch, alive, `beacon.db` created, no INTERNET), mobile-responsive layout (≤700 px: top navigation, 44 px targets).
+  - **Pending hardware gate:** the 12-step device checklist in [docs/ANDROID.md](docs/ANDROID.md).
+  - Known risk: SEED export via WebView download is unverified on Android; fallback plan recorded in ANDROID.md.
+
+## Sprint 008: Release readiness
+> **Status: engineering audit done; owner acceptance pending.**
+
 - [ ] **B-020:** Accessibility pass, threat review, limitations, release instructions and First Light build.
+  - Done: lockfiles committed, `npm ci` and `--locked` in CI; dependency audit workflow; threat model ([docs/THREAT-MODEL.md](docs/THREAT-MODEL.md)); install/upgrade/recovery ([docs/INSTALL.md](docs/INSTALL.md)); release checklist; release notes ([docs/RELEASE-NOTES-v0.1.md](docs/RELEASE-NOTES-v0.1.md)); stale docs refreshed; Windows PR builds now upload a test EXE.
+  - Accessibility review (code review plus contrast arithmetic; **not** a screen-reader or audit by a specialist): skip link, labelled controls, `aria-current` navigation, live regions for status/errors, focus-visible outlines, table captions/scoped headers, text contrast 7.8:1 or better, reduced-motion support, 44 px touch targets on phones.
+  - Not done / not claimed: screen-reader testing, signed builds, at-rest encryption, physical-device validation.
 
 ## Operating rules
 - Owner approves changes to intended feature scope.

@@ -4,7 +4,7 @@ Builds are **unsigned (Windows) or test-signed (Android)** and are not distribut
 published SHA-256 only to detect a damaged download; it does not prove who built the file.
 
 ## Windows
-1. Download the CI artifact `beacon-windows-test-exe` (EXE plus `SHA256SUMS.txt`) from the PR's Windows CI run.
+1. Download the CI artifact `beacon-windows-test` (EXE plus `SHA256SUMS.txt`) from the PR's Windows CI run.
    Compare `Get-FileHash beacon.exe -Algorithm SHA256` with the checksum file.
 2. Run `beacon.exe`. Windows SmartScreen will warn because the file is unsigned. This is not an installer.
 3. Data lives in `%APPDATA%\org.projectbeacon.desktop` (Settings shows the exact path).
