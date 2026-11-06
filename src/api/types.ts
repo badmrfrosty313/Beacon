@@ -289,3 +289,114 @@ export class ApiError extends Error {
     this.code = code;
   }
 }
+
+/**
+ * Private research import (B-014/B-015). Mirrors src-tauri/src/research/mod.rs. Everything here
+ * is private to this device; there is no publish, sync or upload path.
+ */
+export interface ResearchCollection {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  documentCount: number;
+}
+
+export type ImportedFormat = 'pdf' | 'md' | 'txt';
+
+export interface ImportedSummary {
+  id: number;
+  collectionId: number;
+  title: string;
+  /** The file name as chosen. Display only; stored originals are named by hash. */
+  originalName: string;
+  format: ImportedFormat;
+  sha256: string;
+  byteLength: number;
+  pageCount: number | null;
+  /** True when the extracted text was cut at a safety limit. */
+  textTruncated: boolean;
+  extractionMethod: string;
+  author: string | null;
+  publisher: string | null;
+  /** The document's own authored/published date, never the import time. */
+  publishedDate: string | null;
+  importedAt: string;
+  updatedAt: string;
+}
+
+export interface ImportedDocument extends ImportedSummary {
+  attributionNote: string | null;
+  /** Redistribution/rights notes, kept apart from private-use permission. */
+  rightsNote: string | null;
+  /** Derivative text for reading and search; the preserved original is the source. */
+  body: string;
+}
+
+export interface ImportedHit {
+  id: number;
+  collectionId: number;
+  title: string;
+  format: ImportedFormat;
+  snippet: string;
+  importedAt: string;
+}
+
+export interface ImportedSourceLink {
+  id: number;
+  researchDocumentId: number;
+  sourceId: number;
+  createdAt: string;
+}
+
+export interface ImportedExcerpt {
+  id: number;
+  researchDocumentId: number;
+  claimId: number;
+  location: string | null;
+  createdAt: string;
+}
+
+export interface ImportedLinks {
+  sourceLinks: ImportedSourceLink[];
+  excerpts: ImportedExcerpt[];
+}
+
+export interface DuplicateMatch {
+  id: number;
+  title: string;
+}
+
+export interface DuplicateCheck {
+  research: DuplicateMatch | null;
+  archive: DuplicateMatch | null;
+}
+
+export interface CollectionInput {
+  name: string;
+  description?: string | null;
+}
+
+export interface ResearchMetadata {
+  title: string;
+  author?: string | null;
+  publisher?: string | null;
+  publishedDate?: string | null;
+  attributionNote?: string | null;
+  rightsNote?: string | null;
+}
+
+export interface ResearchMetadataUpdate extends ResearchMetadata {
+  collectionId: number;
+}
+
+export interface ResearchImportInput extends Partial<ResearchMetadata> {
+  name: string;
+  bytes: Uint8Array;
+  collectionId: number;
+  /** PDF only: text extracted locally by the app. Ignored for .md/.txt. */
+  extractedText?: string;
+  extractionMethod?: string;
+  pageCount?: number;
+  textTruncated?: boolean;
+}

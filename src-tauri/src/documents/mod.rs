@@ -115,7 +115,7 @@ fn original_path(data_dir: &Path, sha256: &str, format: &str) -> PathBuf {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Stored {
+pub(crate) enum Stored {
     /// No file existed; this call created it. Do not unlink on INSERT failure: another
     /// process may already have committed a row pointing at the same hash.
     Created,
@@ -127,7 +127,17 @@ enum Stored {
 
 /// Atomically ensure `<sha256>.<format>` contains exactly `bytes`.
 fn ensure_original(data_dir: &Path, sha256: &str, format: &str, bytes: &[u8]) -> Result<Stored> {
-    let target = original_path(data_dir, sha256, format);
+    store_original(&originals_dir(data_dir), sha256, format, bytes)
+}
+
+/// Same guarantee for any content-addressed directory (also used by the research importer).
+pub(crate) fn store_original(
+    dir: &Path,
+    sha256: &str,
+    format: &str,
+    bytes: &[u8],
+) -> Result<Stored> {
+    let target = dir.join(format!("{sha256}.{format}"));
     let existed = target.exists();
     if existed {
         if let Ok(current) = fs::read(&target) {
@@ -136,8 +146,7 @@ fn ensure_original(data_dir: &Path, sha256: &str, format: &str, bytes: &[u8]) ->
             }
         }
     }
-    let dir = originals_dir(data_dir);
-    fs::create_dir_all(&dir)?;
+    fs::create_dir_all(dir)?;
     let tmp = dir.join(format!(
         "{sha256}.{}.{}.tmp",
         std::process::id(),
@@ -164,7 +173,12 @@ fn ensure_original(data_dir: &Path, sha256: &str, format: &str, bytes: &[u8]) ->
 /// Remove temporary files left behind by an interrupted write. Best effort: only files older
 /// than `min_age` are touched, so a write in progress in another process is never disturbed.
 pub fn sweep_stale_temp_files(data_dir: &Path, min_age: Duration) -> usize {
-    let Ok(entries) = fs::read_dir(originals_dir(data_dir)) else {
+    sweep_stale_temp_files_in(&originals_dir(data_dir), min_age)
+}
+
+/// As [`sweep_stale_temp_files`], for any content-addressed directory.
+pub(crate) fn sweep_stale_temp_files_in(dir: &Path, min_age: Duration) -> usize {
+    let Ok(entries) = fs::read_dir(dir) else {
         return 0;
     };
     let now = SystemTime::now();

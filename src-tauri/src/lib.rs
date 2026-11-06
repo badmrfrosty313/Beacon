@@ -16,6 +16,7 @@ pub mod db;
 pub mod documents;
 pub mod error;
 pub mod notes;
+pub mod research;
 pub mod scripture;
 pub mod state;
 pub mod watchtower;
@@ -41,6 +42,17 @@ pub fn run() {
             commands::list_documents,
             commands::get_document,
             commands::search_documents,
+            commands::research_create_collection,
+            commands::research_list_collections,
+            commands::research_check_duplicate,
+            commands::research_import,
+            commands::research_list,
+            commands::research_get,
+            commands::research_search,
+            commands::research_update_metadata,
+            commands::research_link_source,
+            commands::research_link_excerpt,
+            commands::research_links,
             commands::scripture_overview,
             commands::scripture_lookup,
             commands::scripture_chapter,

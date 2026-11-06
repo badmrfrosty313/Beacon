@@ -15,7 +15,7 @@ pub struct Rejection(pub &'static str);
 
 /// Bidirectional-override/isolate and zero-width characters let a name display as something it
 /// is not (`evil\u{202E}txt.exe`), so they are refused alongside ordinary control characters.
-fn is_deceptive_display_char(ch: char) -> bool {
+pub(crate) fn is_deceptive_display_char(ch: char) -> bool {
     matches!(
         ch,
         '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}' | '\u{2066}'..='\u{2069}' | '\u{FEFF}'

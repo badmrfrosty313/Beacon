@@ -107,3 +107,21 @@ Use only invented test data; the demo is not for real research. Check these on t
 
 The demo stores everything in IndexedDB (database version 3; notes and documents are untouched by the upgrade).
 Record these checks as browser-only, not native verification.
+
+### Research import in the browser demo (Sprint 005)
+
+Use only invented files; the demo is not for real research. Check on the hosted page after merge:
+
+21. **Archive → Research**. Create a collection `Test research`. Choose an invented `.md` file and a text-layer
+    PDF you made yourself. The preview shows the file name, type, SHA-256, the extracted text and the extraction
+    limits (no OCR). Nothing appears in the library yet.
+22. Import with the collection chosen. Open the document: the fingerprint and "re-checked just now" appear.
+    Choose the same file again: it is reported as already imported and no second record is made.
+23. Search a word from the text (a simple word scan here, not SQLite FTS5). Try an image-only PDF: it is refused
+    with an explanation.
+24. In the reader, create a source from the document, record an excerpt in a class you choose (there is no
+    default) and attach it to a hypothesis. Reload, then switch the network off: all of it is still there.
+
+The demo stores research in IndexedDB (database version 4) in this browser profile only; there is no file on
+disk and clearing site data erases it. Record these as browser-only checks, not native verification.
+

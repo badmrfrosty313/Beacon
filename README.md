@@ -14,13 +14,15 @@
 > been launched or tried by a person**, and CI has not yet run on it. See [TASKS.md](TASKS.md).
 > **Sprint 004 (Watchtower research workspace) is on branch `feature/sprint-004-watchtower`; it has not
 > been launched or tried by a person.** See [TASKS.md](TASKS.md) for exactly what has been verified.
+> **Sprint 005 (private research import) is on branch `feature/sprint-005-research-import`; it has not
+> been launched or tried by a person.** See [TASKS.md](TASKS.md) for exactly what has been verified.
 > No advanced security or emergency functions should be assumed operational.
 
 BEACON is intended to make important information usable even when internet access, external accounts or AI services are unavailable. Its initial version focuses on a searchable local document archive, a transparent evidence-analysis workspace, and portable export/import.
 
 BEACON is a general-purpose tool. A user's theological, historical or geopolitical research can live in an **optional** research collection; it is not presented as verified emergency advice.
 
-## What exists today (Sprints 001 to 004)
+## What exists today (Sprints 001 to 005)
 
 - A dark-mode desktop window branded **PROJECT BEACON** with navigation for Archive, Scripture, Watchtower, Lifeline and Settings. Lifeline is a clearly labeled **Not implemented** placeholder.
 - A local **SQLite** database created on first launch in the per-user application-data directory, managed by **versioned, forward-only migrations**.
@@ -28,6 +30,7 @@ BEACON is a general-purpose tool. A user's theological, historical or geopolitic
 - **Archive → Notes**: the Sprint 001 plain-text notes, unchanged.
 - **Scripture** (Sprint 003): the complete World English Bible (Protestant, 66 books; public domain, packaged with the app, see [ADR-014](DECISIONS.md)). Pick a book and chapter or type a reference (`John 3:16`, `Rev 13:16-18`, `1 John 4:1`, `Psalm 23`), read verse by verse, step to the previous/next chapter, select a verse or range, **copy the canonical reference**, or **Create note from reference** (a normal note whose first line is `Scripture reference: Revelation 13:18 (WEB)`; the note links back to the passage). No Scripture text is fetched at run time and BEACON adds no commentary. Regenerate or verify the packaged data with `npm run scripture:verify`.
 - **Watchtower** (Sprint 004): a private research workspace. Record **events** (with a stated date, or none), **sources** (author, publisher, address, published and retrieved dates, optional link to an Archive document), **statements** classified as *observation*, *attributed claim*, *interpretation* or *forecast*, and **hypotheses** (propositions with a status you control). Link evidence to a hypothesis as *supports*, *contradicts* or *context* with a written reason, and view an event-date-ordered timeline. BEACON never fetches a source address, never scores or concludes, and nothing leaves the device. See [ADR-015](DECISIONS.md). Limitations: no delete, no history, no export yet.
+- **Archive → Research** (Sprint 005): a private library for your own research. Review a text-layer **PDF**, Markdown or text file *before* anything is stored (file name, type, SHA-256, extracted text, extraction limits), choose a collection (for example Convergence research, Biblical research, Astronomy, General research), add author, source and date details, and import. The original is kept byte for byte and re-verified whenever you open it; the extracted text is a derivative. Importing the same file twice is detected. Search is local, and you may optionally map a document into Watchtower (create a source, record an excerpt in a class *you* choose, attach it to a hypothesis) one deliberate step at a time. There is no OCR, nothing is published or uploaded, and private research never belongs in this repository. See [ADR-016](DECISIONS.md).
 - Everything is stored locally and survives closing and reopening the app. The hosted **browser demo** has the same workflow over IndexedDB, with a clearly labeled, simpler word search (see [docs/BROWSER-DEMO.md](docs/BROWSER-DEMO.md)).
 - No account, no cloud connection, no telemetry, no external API, and no networking dependency.
 

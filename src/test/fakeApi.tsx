@@ -16,6 +16,9 @@ import {
   type ScriptureOverview,
   type ScripturePassage,
   type SearchHit,
+  type ImportedLinks,
+  type ImportedSummary,
+  type ResearchCollection,
   type WatchtowerSnapshot,
 } from '../api/types';
 import { validateDocument } from '../lib/documentValidation';
@@ -150,6 +153,22 @@ export function createFakeApi(seed: Note[] = [], info: AppInfo = DEFAULT_INFO) {
     createHypothesis: vi.fn(unavailableWatchtower),
     updateHypothesis: vi.fn(unavailableWatchtower),
     createEvidenceLink: vi.fn(unavailableWatchtower),
+    // Research import: App-level tests need an empty library. Behaviour is covered against the
+    // real IndexedDB adapter (browserResearch.test.ts, ResearchPanel.test.tsx).
+    listResearchCollections: vi.fn(async (): Promise<ResearchCollection[]> => []),
+    createResearchCollection: vi.fn(unavailableWatchtower),
+    checkResearchDuplicate: vi.fn(async () => ({ research: null, archive: null })),
+    importResearch: vi.fn(unavailableWatchtower),
+    listResearch: vi.fn(async (): Promise<ImportedSummary[]> => []),
+    getResearch: vi.fn(unavailableWatchtower),
+    searchResearch: vi.fn(async () => []),
+    updateResearchMetadata: vi.fn(unavailableWatchtower),
+    getResearchLinks: vi.fn(async (): Promise<ImportedLinks> => ({
+      sourceLinks: [],
+      excerpts: [],
+    })),
+    linkResearchSource: vi.fn(unavailableWatchtower),
+    linkResearchExcerpt: vi.fn(unavailableWatchtower),
     // Real packaged text through the same TypeScript engine the browser demo uses.
     getScriptureOverview: vi.fn(async (): Promise<ScriptureOverview> =>
       testScriptureEngine().overview(),

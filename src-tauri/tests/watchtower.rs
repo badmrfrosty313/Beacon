@@ -58,7 +58,10 @@ fn a_version_3_database_upgrades_keeping_notes_documents_and_scripture() {
 
     // Opening with the current build upgrades it in place.
     let conn = db::open_and_migrate(&path).unwrap();
-    assert_eq!(migrations::current_version(&conn).unwrap(), 4);
+    assert_eq!(
+        migrations::current_version(&conn).unwrap(),
+        migrations::latest_version()
+    );
 
     // Everything that existed is still there.
     let listed = notes::list(&conn).unwrap();
@@ -90,7 +93,10 @@ fn a_version_3_database_upgrades_keeping_notes_documents_and_scripture() {
     // Re-opening an already-upgraded database changes nothing.
     drop(conn);
     let conn = db::open_and_migrate(&path).unwrap();
-    assert_eq!(migrations::current_version(&conn).unwrap(), 4);
+    assert_eq!(
+        migrations::current_version(&conn).unwrap(),
+        migrations::latest_version()
+    );
     assert_eq!(watchtower::snapshot(&conn).unwrap().sources.len(), 1);
 }
 

@@ -16,7 +16,7 @@ export async function readImportFile(file: File): Promise<ImportDocument> {
 }
 
 /** FileReader is used (rather than Blob.arrayBuffer) because it works in every supported WebView. */
-function readAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+export function readAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {

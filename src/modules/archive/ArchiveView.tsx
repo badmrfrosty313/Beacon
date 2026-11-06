@@ -7,8 +7,10 @@ import { NoteDetail } from './NoteDetail';
 import { NoteForm, type NoteDraft } from './NoteForm';
 import { DocumentsPanel } from './DocumentsPanel';
 import { NoteList } from './NoteList';
+import { ResearchPanel } from '../research/ResearchPanel';
+import type { PdfExtractor } from '../../lib/research/pdfText';
 
-export type ArchiveSection = 'documents' | 'notes';
+export type ArchiveSection = 'documents' | 'research' | 'notes';
 
 export type ArchivePane = { kind: 'empty' } | { kind: 'new' } | { kind: 'note'; id: number };
 
@@ -26,6 +28,8 @@ interface ArchiveViewProps {
   refreshRevision: number;
   /** Opens a Scripture reference found in a note; omit to hide those links. */
   onOpenScripture?: (reference: string) => void;
+  /** Test seam: replaces the real PDF text extractor. */
+  extractPdf?: PdfExtractor;
 }
 
 export function ArchiveView({
@@ -41,6 +45,7 @@ export function ArchiveView({
   saveError,
   refreshRevision,
   onOpenScripture,
+  extractPdf,
 }: ArchiveViewProps) {
   const api = useApi();
   const [notes, setNotes] = useState<NoteSummary[] | null>(null);
@@ -84,7 +89,7 @@ export function ArchiveView({
       </header>
 
       <div className="section-switch" role="group" aria-label="Archive sections">
-        {(['documents', 'notes'] as const).map((id) => (
+        {(['documents', 'research', 'notes'] as const).map((id) => (
           <button
             key={id}
             type="button"
@@ -92,13 +97,15 @@ export function ArchiveView({
             aria-pressed={section === id}
             onClick={() => onSectionChange(id)}
           >
-            {id === 'documents' ? 'Documents' : 'Notes'}
+            {id === 'documents' ? 'Documents' : id === 'research' ? 'Research' : 'Notes'}
           </button>
         ))}
       </div>
 
       {section === 'documents' ? (
         <DocumentsPanel />
+      ) : section === 'research' ? (
+        <ResearchPanel extractPdf={extractPdf} />
       ) : (
         <div className="archive-layout">
           <NoteList
